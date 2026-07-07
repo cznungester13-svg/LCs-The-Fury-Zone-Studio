@@ -91,10 +91,12 @@ venv/
 .venv/
 env/
 ENV/
+# Ignore the virtual environment folders where packages are installed
+venv/
+.venv/
+env/
 
-# Python Cache and Compiled files
+# Ignore Python caching files (temporary files Python makes to run faster)
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.pytest_cache/
+
