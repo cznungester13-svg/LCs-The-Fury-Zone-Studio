@@ -216,6 +216,4 @@ async def startup_db():
     await seed_data()
 
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+
