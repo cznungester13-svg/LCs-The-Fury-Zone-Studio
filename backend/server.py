@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -18,8 +19,14 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-app = FastAPI(title="LC's The Fury Zone API")
-api_router = APIRouter(prefix="/api")
+# Define the lifespan manager for database cleanup
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    client.close()
+
+# Create the main app and pass the lifespan manager
+app = FastAPI(lifespan=lifespan)
 
 
 # ---------------- Models ----------------
