@@ -86,3 +86,15 @@ android-sdk/
 credentials.json
 *.key
 .credentials
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python Cache and Compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
