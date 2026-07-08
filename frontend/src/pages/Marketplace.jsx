@@ -4,7 +4,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import { ListingCard } from "../components/cards";
 import { Spinner, EmptyState, Btn } from "../components/common";
-import { SelectFilter } from "./Shop
+import { SelectFilter } from "./Store";
 import { SlidersHorizontal } from "lucide-react";
 
 const CONDITIONS = [["", "All conditions"], ["new", "New"], ["like_new", "Like New"], ["good", "Good"], ["fair", "Fair"]];
