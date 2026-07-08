@@ -1,62 +1,54 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+// Fix: Resolve paths cleanly via relative file structure
+import api from "../lib/api";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
-export const useCart = () => useContext(CartContext);
 
-export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("fury_cart")) || [];
-    } catch {
-      return [];
+export function CartProvider({ children }) {
+  const { user } = useAuth();
+  const [cart, setCart] = useState({ items: [], subtotal: 0 });
+
+  const refreshCart = useCallback(async () => {
+    if (!user) {
+      setCart({ items: [], subtotal: 0 });
+      return;
     }
-  });
+    try {
+      const { data } = await api.get("/cart");
+      setCart(data);
+    } catch {
+      /* ignore */
+    }
+  }, [user]);
 
   useEffect(() => {
-    localStorage.setItem("fury_cart", JSON.stringify(items));
-  }, [items]);
+    refreshCart();
+  }, [refreshCart]);
 
-  const addItem = (product, quantity = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity,
-        },
-      ];
-    });
-    toast.success(`${product.name} added to cart`);
+  const addToCart = async (payload) => {
+    const { data } = await api.post("/cart/add", payload);
+    setCart(data);
+    return data;
   };
 
-  const updateQuantity = (id, quantity) => {
-    if (quantity < 1) return removeItem(id);
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
+  const updateItem = async (payload) => {
+    const { data } = await api.post("/cart/update", payload);
+    setCart(data);
   };
 
-  const removeItem = (id) =>
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = async (itemId) => {
+    const { data } = await api.delete(`/cart/item/${itemId}`);
+    setCart(data);
+  };
 
-  const clearCart = () => setItems([]);
-
-  const count = items.reduce((s, i) => s + i.quantity, 0);
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const count = cart.items?.reduce((a, i) => a + i.quantity, 0) || 0;
 
   return (
-    <CartContext.Provider
-      value={{ items, addItem, updateQuantity, removeItem, clearCart, count, subtotal }}
-    >
+    <CartContext.Provider value={{ cart, count, refreshCart, addToCart, updateItem, removeItem }}>
       {children}
     </CartContext.Provider>
   );
-};
+}
+
+export const useCart = () => useContext(CartContext);
