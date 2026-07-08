@@ -68,11 +68,12 @@ async def list_listings(
     # Create a list of co-routines (tasks) without awaiting them yet
     tasks = [_decorate_listing(l) for l in items]
     
-    # Fire them all off concurrently and wait for the entire batch to complete
-    await asyncio.gather(*tasks)
+items = await db.products.find(q, NO_ID).sort(field, direction).to_list(limit)
+    
+    # Fire all product decoration database calls at the exact same time
+    await asyncio.gather(*[_decorate_product(p) for p in items])
     
     return items
-
 
 @router.get("/listings/{listing_id}")
 async def get_listing(listing_id: str):
