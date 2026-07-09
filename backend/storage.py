@@ -95,7 +95,6 @@ backend_url = os.environ.get("PUBLIC_BASE", "").rstrip("/")
         "url": f"{backend_url}/api/files/{result['path']}"
     }
 
-
 @router.get("/files/{path:path}")
 async def serve_file(path: str):
     record = await db.files.find_one({"storage_path": path, "is_deleted": False}, NO_ID)
