@@ -44,7 +44,6 @@ async def seed_catalog():
         return
     dept_ids = {}
     
-    # Fully expanded list including Home & Garden and Handbags departments
     all_departments = [
         "Footwear", "Apparel", "Electronics", "Bed & Bath", "Modern Furniture & Decor",
         "Kitchen & Small Appliances", "Health & Beauty", "Pets & Pet Supplies", 
@@ -57,7 +56,7 @@ async def seed_catalog():
                                          "slug": name.replace(" ", "-").replace("&", "and").replace(",", "").lower(), "created_at": now_iso()})
 
     brands = {}
-    for name in ["FuryLab", "Streetline", "Voltage", "Northpeak", "CraftCore", "BeautyPure", "PetPride", "GlowStyle", "HomeFit"]:
+    for name in ["FuryLab", "Streetline", "Voltage", "Northpeak", "CraftCore", "BeautyPure", "PetPride", "GlowStyle", "HomeFit", "FuryGadgets", "IronForge", "PartyZone"]:
         bid = str(uuid.uuid4())
         brands[name] = bid
         await db.brands.insert_one({"id": bid, "name": name, "created_at": now_iso()})
@@ -65,16 +64,16 @@ async def seed_catalog():
     cats = {}
     cat_map = {
         "Footwear": ["Sneakers", "Boots"], 
-        "Apparel": ["Hoodies", "Tees"],
-        "Electronics": ["Cameras", "Audio"],
+        "Apparel": ["Hoodies", "Tees", "Costumes & Masks"], # Added Costumes & Masks
+        "Electronics": ["Cameras", "Audio", "Smart Gadgets"],
         "Bed & Bath": ["Linens", "Bath Accessories"],
         "Modern Furniture & Decor": ["Decor"],
         "Kitchen & Small Appliances": ["Appliances", "Cookware"],
         "Health & Beauty": ["Skincare", "Cosmetics", "Nail Care"],
         "Pets & Pet Supplies": ["Pet Essentials"],
         "Jewelry": ["Accessories"],
-        "Arts, Crafts & Hobbies": ["Crochet & Yarn", "Craft Kits"],
-        "Home, Garden & Tools": ["Garden Supplies", "Home Tools"],
+        "Arts, Crafts & Hobbies": ["Crochet & Yarn", "Craft Kits", "Metaphysical & Wicca", "Party Supplies & Novelties"], # Added Party/Gags
+        "Home, Garden & Tools": ["Garden Supplies", "Home Tools", "Blades & Collectibles"],
         "Handbags & Accessories": ["Bags", "Sunglasses"]
     }
     for dept, clist in cat_map.items():
@@ -94,7 +93,7 @@ async def seed_catalog():
          "Apparel", "Hoodies", "Streetline", [IMG["hoodie"]], ["hoodie", "streetwear"], True, 60),
         ("Fury Zone Tee", "Premium cotton tee with bold Fury Zone print.", 39.0,
          "Apparel", "Tees", "FuryLab", [IMG["hero"]], ["tee", "cotton"], False, 120),
-        ("Northpeak Field Camera", "Compact mirrorless camera for creators.", 749.0,
+         ("Northpeak Field Camera", "Compact mirrorless camera for creators.", 749.0,
          "Electronics", "Cameras", "Northpeak", [IMG["camera"]], ["camera", "photo"], True, 15),
     ]
 
@@ -106,19 +105,23 @@ async def seed_catalog():
     for idx in range(1, 51):
         products.append((f"{styles[idx % 5]} Classic Sneaker (Batch #{idx})", "Comfortable daily footwear choice.", random.choice(footwear_prices), "Footwear", "Sneakers", "Streetline", footwear_images, ["shoes"], False, random.randint(20, 80)))
 
-    # 2. APPAREL GENERATOR (50 Budget Items)
-    apparel_prices = [12.99, 14.99, 19.99, 24.99, 29.99]
+    # 2. APPAREL GENERATOR (50 Budget Items - Now includes Kids/Adult Costumes & Masks)
+    apparel_prices = [14.99, 19.99, 24.99, 29.99, 34.99]
     apparel_images = ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=60"]
+    apparel_types = ["Adult Deluxe Fantasy Costume Set", "Kids Heroic Adventure Outfit", "Premium Silicone Cosplay Mask (Adult)", "Breathable Festive Costume Mask (Kids)", "Essential Cotton Core Tee"]
     for idx in range(1, 51):
-        products.append((f"{styles[idx % 5]} Essential Tee (Batch #{idx})", "Soft standard cotton fit.", random.choice(apparel_prices), "Apparel", "Tees", "FuryLab", apparel_images, ["apparel"], False, random.randint(40, 150)))
+        a_type = apparel_types[idx % len(apparel_types)]
+        products.append((f"{styles[idx % 5]} {a_type} (#{idx})", f"High-quality and comfortable {a_type.lower()} tailored perfectly for dress-up events, parties, and daily streetwear flare.", random.choice(apparel_prices), "Apparel", "Costumes & Masks" if "Costume" in a_type or "Mask" in a_type else "Tees", "PartyZone" if "Costume" in a_type or "Mask" in a_type else "FuryLab", apparel_images, ["apparel", "costumes"], False, random.randint(30, 110)))
 
     # 3. ELECTRONICS GENERATOR (50 Budget Items)
-    electronics_prices = [15.99, 19.99, 24.99, 34.99, 49.99]
-    electronics_images = ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=60"]
+    electronics_prices = [12.99, 19.99, 24.99, 34.99, 45.00]
+    electronics_images = ["https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=60"]
+    electronics_types = ["Smart LED Pocket Projector", "RGB Color-Sync Desk Light Strip", "Magnetic Wireless MagSafe Battery Pack", "Mini Handheld Turbo Jet Fan", "Bluetooth Item Key Finder Trackers"]
     for idx in range(1, 51):
-        products.append((f"{styles[idx % 5]} Audio Earbuds (Batch #{idx})", "Reliable audio experience on a budget.", random.choice(electronics_prices), "Electronics", "Audio", "Voltage", electronics_images, ["tech"], False, random.randint(15, 60)))
+        e_type = electronics_types[idx % len(electronics_types)]
+        products.append((f"{styles[idx % 5]} {e_type} (#{idx})", f"Trending new tech {e_type.lower()} built to upgrade your daily workflow and desk setup efficiently.", random.choice(electronics_prices), "Electronics", "Smart Gadgets", "FuryGadgets", electronics_images, ["gadget", "tech"], False, random.randint(15, 60)))
 
-    # 4. BED & BATH (With your requested Bathroom Decor items - 50 Items)
+    # 4. BED & BATH (50 Items)
     LINEN_PRICES = [12.99, 14.50, 19.99, 24.99, 29.99]
     linen_images = ["https://images.unsplash.com/photo-1617811449482-31093c8cee16?w=600&auto=format&fit=crop&q=60"]
     bath_decor_types = ["Complete Shower Curtain Set with Rings", "Anti-Slip Microfiber Bath Mat", "Rustproof Hanging Shower Caddy", "Minimalist Toothbrush Holder Stand", "Luxury Cotton Bath Sheet Pack"]
@@ -132,7 +135,7 @@ async def seed_catalog():
     for idx in range(1, 51):
         products.append((f"{styles[idx % 5]} Accent Decor (Batch #{idx})", "Stunning geometric accent pieces for home styling.", random.choice(FURNITURE_PRICES), "Modern Furniture & Decor", "Decor", "FuryLab", furniture_images, ["decor"], False, random.randint(10, 45)))
 
-    # 6. KITCHEN & SMALL APPLIANCES (With Cookware & Bakeware - 50 Budget Items)
+    # 6. KITCHEN & SMALL APPLIANCES (50 Budget Items)
     kitchen_prices = [16.99, 22.99, 27.50, 34.99, 45.00]
     kitchen_images = ["https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&auto=format&fit=crop&q=60"]
     kitchen_types = ["Non-Stick Premium Cookware Set", "Heavy-Duty Carbon Steel Bakeware Set", "Personal Countertop Blender", "Electric Rapid Heating Kettle", "Digital Precision Food Scale"]
@@ -140,7 +143,7 @@ async def seed_catalog():
         k_type = kitchen_types[idx % len(kitchen_types)]
         products.append((f"{styles[idx % 5]} {k_type} (#{idx})", f"Durable {k_type.lower()} curated for seamless kitchen utility and culinary efficiency.", random.choice(kitchen_prices), "Kitchen & Small Appliances", "Cookware", "Voltage", kitchen_images, ["kitchen", "cookware"], False, random.randint(15, 50)))
 
-    # 7. HEALTH & BEAUTY (With Acrylic Nails Kits - 50 Budget Items)
+    # 7. HEALTH & BEAUTY (50 Budget Items)
     beauty_prices = [9.99, 14.99, 19.99, 24.99, 32.50]
     beauty_images = ["https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&auto=format&fit=crop&q=60"]
     beauty_types = ["Professional Acrylic Nails Kit with UV Lamp", "Organic Facial Hydration Serum", "Synthetic Makeup Brush Set (12-Piece)", "Natural Jade Facial Massage Roller", "Botanical Lip Care Balm Multi-Pack"]
@@ -156,7 +159,7 @@ async def seed_catalog():
         p_type = pet_types[idx % len(pet_types)]
         products.append((f"{styles[idx % 5]} {p_type} (#{idx})", f"Premium durability {p_type.lower()} to ensure maximum comfort and happiness for your pets.", random.choice(pet_prices), "Pets & Pet Supplies", "Pet Essentials", "PetPride", pet_images, ["pets", "supplies"], False, random.randint(20, 90)))
 
-    # 9. JEWELRY (With Wicca Jewelry & Cheap Engagement Sets - 50 Budget Items)
+    # 9. JEWELRY (50 Budget Items)
     jewelry_prices = [11.99, 15.99, 19.99, 24.99, 29.99]
     jewelry_images = ["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=60"]
     jewelry_types = ["Aesthetic Gothic Wicca Pendant Necklace", "Affordable Cubic Zirconia Engagement Set", "Minimalist Sterling Silver Band Ring", "Classic Stud Earrings Multi-Pack", "Adjustable Layered Charm Bracelet"]
@@ -164,23 +167,23 @@ async def seed_catalog():
         j_type = jewelry_types[idx % len(jewelry_types)]
         products.append((f"{styles[idx % 5]} {j_type} (#{idx})", f"Finely crafted {j_type.lower()} detailed beautifully to accentuate personal flair and statement styling.", random.choice(jewelry_prices), "Jewelry", "Accessories", "GlowStyle", jewelry_images, ["jewelry", "rings"], False, random.randint(15, 75)))
 
-    # 10. ARTS, CRAFTS & HOBBIES (50 Items)
-    craft_prices = [8.99, 12.99, 16.50, 21.99, 27.99]
+    # 10. ARTS, CRAFTS & HOBBIES (50 Items - Now includes Adult Gag Gifts & Party Supplies)
+    craft_prices = [5.99, 9.99, 14.50, 19.99, 24.99]
     craft_images = ["https://images.unsplash.com/photo-1584992231908-03ff25fb26a4?w=600&auto=format&fit=crop&q=60"]
-    craft_types = ["Premium Acrylic Crochet Yarn Pack", "Ergonomic Aluminum Crochet Hooks Set", "Heavyweight Mixed Media Sketchbook", "Professional Acrylic Paint Set", "Macrame Cotton Cord Spool"]
+    craft_types = ["Hilarious Adult Gag Gift Novelty Item", "Complete Party Supplies & Streamers Pack", "Premium Acrylic Crochet Yarn Pack", "Natural Soy Altar Ritual Spell Candles (Pack of 12)", "Celestial Moon Phase Embroidered Altar Cloth"]
     for idx in range(1, 51):
         c_type = craft_types[idx % len(craft_types)]
-        products.append((f"{styles[idx % 5]} {c_type} (#{idx})", f"High-quality {c_type.lower()} ideal for all your artistic hobby projects and DIY creations.", random.choice(craft_prices), "Arts, Crafts & Hobbies", "Crochet & Yarn", "CraftCore", craft_images, ["crafts", "yarn", "crochet"], False, random.randint(25, 110)))
+        products.append((f"{styles[idx % 5]} {c_type} (#{idx})", f"Fun, functional, and decorative {c_type.lower()} designed to liven up social gatherings, celebrations, or unique crafting styles seamlessly.", random.choice(craft_prices), "Arts, Crafts & Hobbies", "Party Supplies & Novelties" if "Gag" in c_type or "Party" in c_type else "Metaphysical & Wicca" if "Altar" in c_type else "Crochet & Yarn", "PartyZone" if "Gag" in c_type or "Party" in c_type else "CraftCore", craft_images, ["crafts", "novelty", "party"], False, random.randint(25, 110)))
 
-    # 11. HOME, GARDEN & TOOLS (New Department - 50 Items)
-    garden_prices = [12.99, 18.50, 24.99, 32.00, 45.00]
+    # 11. HOME, GARDEN & TOOLS (50 Items)
+    garden_prices = [14.99, 19.99, 24.99, 34.99, 45.00]
     garden_images = ["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=60"]
-    garden_types = ["Ergonomic Garden Hand Trowel Set", "Heavy Duty Waterproof Garden Hose", "Solar-Powered Pathway LED Lights (Pack of 6)", "Multi-Pocket Fabric Tool Organizer", "Indoor/Outdoor Geometric Planter Pot"]
+    garden_types = ["Decorative Celtic Short Sword with Sheath", "Ornate Stainless Steel Collectible Dagger", "Heavy-Duty Full Tang Camping Hunting Knife", "Ergonomic Garden Hand Trowel Set", "Solar-Powered Pathway LED Lights (Pack of 6)"]
     for idx in range(1, 51):
         g_type = garden_types[idx % len(garden_types)]
-        products.append((f"{styles[idx % 5]} {g_type} (#{idx})", f"Reliable {g_type.lower()} designed to assist with home improvement and lawn care updates.", random.choice(garden_prices), "Home, Garden & Tools", "Garden Supplies", "HomeFit", garden_images, ["home", "garden"], False, random.randint(15, 65)))
+        products.append((f"{styles[idx % 5]} {g_type} (#{idx})", f"Premium {g_type.lower()} built with meticulous design for unique home collection displays and reliable outdoor utilities.", random.choice(garden_prices), "Home, Garden & Tools", "Blades & Collectibles" if "Sword" in g_type or "Dagger" in g_type or "Knife" in g_type else "Garden Supplies", "IronForge" if "Sword" in g_type or "Dagger" in g_type or "Knife" in g_type else "HomeFit", garden_images, ["home", "blades", "tools"], False, random.randint(15, 65)))
 
-    # 12. HANDBAGS & ACCESSORIES (New Department - 50 Items)
+    # 12. HANDBAGS & ACCESSORIES (50 Items)
     bag_prices = [15.99, 19.99, 25.50, 29.99, 39.99]
     bag_images = ["https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=60"]
     bag_types = ["Classic Designer-Style Tote Handbag", "UV-400 Protection Classic Sunglasses", "Compact Faux-Leather Crossbody Purse", "Slim RFID Blocking Travel Wallet", "Aesthetic Shoulder Hobo Bag"]
