@@ -18,7 +18,7 @@ from engage import router as engage_router
 from admin_routes import router as admin_router
 from storage import router as files_router
 from seed import run_seed
-
+from chat import router as chat_router
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
