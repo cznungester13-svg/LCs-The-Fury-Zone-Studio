@@ -29,7 +29,6 @@ export default function AdminDashboard() {
         Admin Control
       </h1>
 
-      {/* Tabs Navigation */}
       <div className="flex gap-2 flex-wrap mb-8">
         {TABS.map(([id, label, Icon]) => (
           <button 
@@ -42,25 +41,26 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Tab Content Rendering */}
-      {tab === "overview" && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="p-6 border-2 border-zinc-900">
-            <h3 className="font-bold uppercase tracking-tighter">Total Revenue</h3>
-            <p className="text-3xl font-black">${metrics.revenue.toFixed(2)}</p>
+      <div className="mt-8">
+        {tab === "overview" && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 border-2 border-zinc-900">
+              <h3 className="font-bold uppercase tracking-tighter">Total Revenue</h3>
+              <p className="text-3xl font-black">${metrics.revenue.toFixed(2)}</p>
+            </div>
+            <div className="p-6 border-2 border-zinc-900">
+              <h3 className="font-bold uppercase tracking-tighter">Total Commissions</h3>
+              <p className="text-3xl font-black">${metrics.commissions.toFixed(2)}</p>
+            </div>
           </div>
-          <div className="p-6 border-2 border-zinc-900">
-            <h3 className="font-bold uppercase tracking-tighter">Total Commissions</h3>
-            <p className="text-3xl font-black">${metrics.commissions.toFixed(2)}</p>
-          </div>
-        </div>
-      )}
+        )}
 
-      {tab === "orders" && <div>{/* Place your <OrdersList /> component here */}</div>}
-      {tab === "listings" && <div>{/* Place your <ListingsManager /> component here */}</div>}
-      {tab === "products" && <div>{/* Place your <ProductsTable /> component here */}</div>}
-      {tab === "payouts" && <div>{/* Place your <PayoutsTable /> component here */}</div>}
-      {tab === "coupons" && <div>{/* Place your <CouponsManager /> component here */}</div>}
+        {tab !== "overview" && (
+          <p className="text-zinc-500">
+            Selected tab: {tab}. (Add your {tab} components here.)
+          </p>
+        )}
+      </div>
     </div>
   );
 }
