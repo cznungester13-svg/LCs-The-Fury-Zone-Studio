@@ -53,7 +53,7 @@ function App() {
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-
+                <Route path="/community" element={<Community />} />
                 {/* Secure Auth Protected Routes */}
                 <Route path="/sell" element={<ProtectedRoute><SellItem /></ProtectedRoute>} />
                 <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
