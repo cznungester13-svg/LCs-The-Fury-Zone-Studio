@@ -1,18 +1,3 @@
-import uuid
-import asyncio
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
-from typing import Optional
-
-from database import db, now_iso, NO_ID
-from auth import require_roles
-from notify import create_notification
-
-router = APIRouter(prefix="/api/admin", tags=["admin"])
-
-VALID_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"]
-
-
 @router.get("/metrics")
 async def metrics(admin=Depends(require_roles("admin"))):
     # Optimize Revenue via Native Database Aggregation
@@ -28,3 +13,11 @@ async def metrics(admin=Depends(require_roles("admin"))):
         {"$group": {"_id": None, "total_comm": {"$sum": "$commission"}}}
     ]
     comm_cursor = await db.commissions.aggregate(comm_pipeline).to_list(1)
+    commissions = comm_cursor[0]["total_comm"] if comm_cursor else 0.0
+
+    # Return the combined metrics
+    return {
+        "revenue": revenue,
+        "commissions": commissions,
+        "timestamp": now_iso()
+    }
