@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import api, { imgUrl } from "@/lib/api";
-import { Btn, Spinner, Badge } from "@/components/common";
-import { toast } from "sonner";
+import api from "@/lib/api";
 import { BarChart3, ShoppingBag, Tag, Wallet, Ticket, Package } from "lucide-react";
 
 const TABS = [
@@ -15,10 +13,8 @@ const TABS = [
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState("overview");
-  // State for metrics
   const [metrics, setMetrics] = useState({ revenue: 0, commissions: 0 });
 
-  // Fetch metrics when overview tab is active
   useEffect(() => {
     if (tab === "overview") {
       api.get("/api/admin/metrics")
@@ -32,8 +28,21 @@ export default function AdminDashboard() {
       <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter border-b-2 border-black pb-4 mb-6">
         Admin Control
       </h1>
-      
-      {/* Metrics Section for Overview */}
+
+      {/* Tabs Navigation */}
+      <div className="flex gap-2 flex-wrap mb-8">
+        {TABS.map(([id, label, Icon]) => (
+          <button 
+            key={id} 
+            onClick={() => setTab(id)} 
+            className={`flex items-center gap-2 px-4 py-2 border-2 ${tab === id ? 'bg-black text-white' : 'border-zinc-900'}`}
+          >
+            <Icon size={16} /> {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content Rendering */}
       {tab === "overview" && (
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="p-6 border-2 border-zinc-900">
@@ -47,16 +56,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Existing Tabs rendering logic goes below here */}
-      <div className="flex gap-2 flex-wrap mb-8">
-        {TABS.map(([id, label, Icon]) => (
-          <button key={id} onClick={() => setTab(id)} className="...">
-            <Icon size={16} /> {label}
-          </button>
-        ))}
-      </div>
-      
-      {/* Rest of your dashboard content... */}
+      {tab === "orders" && <div>{/* Place your <OrdersList /> component here */}</div>}
+      {tab === "listings" && <div>{/* Place your <ListingsManager /> component here */}</div>}
+      {tab === "products" && <div>{/* Place your <ProductsTable /> component here */}</div>}
+      {tab === "payouts" && <div>{/* Place your <PayoutsTable /> component here */}</div>}
+      {tab === "coupons" && <div>{/* Place your <CouponsManager /> component here */}</div>}
     </div>
   );
 }
