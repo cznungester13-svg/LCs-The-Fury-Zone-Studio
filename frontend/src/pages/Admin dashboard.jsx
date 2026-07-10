@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { BarChart3, ShoppingBag, Tag, Wallet, Ticket, Package } from "lucide-react";
+// Importing your specific components
+import ListingDetail from "@/pages/ListingDetail";
+import ProductDetail from "@/pages/ProductDetail";
 
 const TABS = [
   ["overview", "Overview", BarChart3],
@@ -55,10 +58,13 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {tab !== "overview" && (
-          <p className="text-zinc-500">
-            Selected tab: {tab}. (Add your {tab} components here.)
-          </p>
+        {/* Linking your components */}
+        {tab === "listings" && <ListingDetail />}
+        {tab === "products" && <ProductDetail />}
+        
+        {/* Placeholder for tabs without a component yet */}
+        {["orders", "payouts", "coupons"].includes(tab) && (
+          <p className="text-zinc-500">The {tab} management view is coming soon.</p>
         )}
       </div>
     </div>
