@@ -47,14 +47,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature strip */}
-      <section className="border-b-2 border-black bg-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-3 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-zinc-800">
-          <Feature icon={Zap} title="Instant Resale" text="List used items and go live immediately — no approval queue." />
-          <Feature icon={ShieldCheck} title="Secure Checkout" text="Stripe-powered payments with full order tracking." />
-          <Feature icon={Tag} title="10% Commission" text="Fair, flat platform fee on every resale sale." />
-        </div>
-      </section>
+{/* Department Grid Navigation Tiles */}
+      {departments.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
+          <div className="border-b-2 border-black pb-3 mb-8">
+            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">Shop by Department</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {departments.map((d) => (
+              <Link 
+                key={d.id} 
+                to={`/store?department=${d.slug}`}
+                className="group relative border-2 border-black brutal-shadow bg-white overflow-hidden aspect-[4/3] block"
+              >
+                {d.image ? (
+                  <img 
+                    src={d.image} 
+                    alt={d.name} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-100 flex items-center justify-center font-mono text-zinc-400 text-xs">
+                    NO IMAGE AVAILABLE
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 border-t-2 border-black bg-white p-3 transform transition-transform group-hover:bg-[#FF3B30] group-hover:text-white">
+                  <p className="font-black uppercase text-sm sm:text-base tracking-tight truncate flex items-center justify-between">
+                    {d.name}
+                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured products */}
       <Section title="Featured Store Drops" link="/store" linkLabel="All products">
