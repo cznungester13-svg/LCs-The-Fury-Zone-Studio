@@ -63,10 +63,10 @@ async def health():
     return {"status": "healthy"}
 
 
+# Change your existing line 66 to this:
 for r in [auth_router, catalog_router, resale_router, shop_router,
-          engage_router, admin_router, files_router]:
+          engage_router, admin_router, files_router, chat_router]:
     app.include_router(r)
-
 # Safe parsing configuration for cross-origin tracking vectors
 raw_cors = os.environ.get("CORS_ORIGINS", "*")
 parsed_origins = [origin.strip() for origin in raw_cors.split(",")] if "," in raw_cors else [raw_cors]
