@@ -31,6 +31,7 @@ export function Navbar() {
     { to: "/store", label: "Store" },
     { to: "/marketplace", label: "Resale" },
     { to: "/sell", label: "Sell an Item" },
+    { to: "/community", label: "Community" },
   ];
 
   // Clean string definition for the infinite ticker line
