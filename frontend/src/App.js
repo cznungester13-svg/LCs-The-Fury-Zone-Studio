@@ -22,7 +22,7 @@ import Notifications from "@/pages/Notifications";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AdminDashboard from "@/pages/AdminDashboard";
-
+import Community from "@/pages/Community";
 function App() {
   return (
     <AuthProvider>
