@@ -1,22 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from bson import ObjectId
 from database import db
-from auth import get_current_user, get_current_admin
+from auth import get_current_admin, get_current_user
+from bson import ObjectId
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
+@router.get("/messages")
+async def get_messages():
+    return await db.chat.find().to_list(length=100)
+
+@router.post("/messages")
+async def post_message(data: dict, user: dict = Depends(get_current_user)):
+    # Add logic to save message
+    return {"status": "posted"}
+
 @router.delete("/messages/{message_id}")
-async def delete_message(message_id: str, current_user: dict = Depends(get_current_admin)):
-    # 1. Attempt to find the message
-    message = await db.messages.find_one({"_id": ObjectId(message_id)})
-    
-    # 2. If it doesn't exist, return 404
+async def delete_message(message_id: str, admin: dict = Depends(get_current_admin)):
+    message = await db.chat.find_one({"_id": ObjectId(message_id)})
     if not message:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Message not found"
-        )
-        
-    # 3. Proceed with deletion if found
-    await db.messages.delete_one({"_id": ObjectId(message_id)})
-    return {"status": "success", "message": "Message deleted"}
+        raise HTTPException(status_code=404, detail="Message not found")
+    await db.chat.delete_one({"_id": ObjectId(message_id)})
+    return {"status": "success"}
