@@ -1,0 +1,18 @@
+name: Run Database Cleanup
+on: [workflow_dispatch] 
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install motor
+      - name: Run cleanup script
+        run: python backend/scripts/purge_test_data.py
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
