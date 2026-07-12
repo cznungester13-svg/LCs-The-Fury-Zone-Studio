@@ -51,15 +51,13 @@ export default function Store() {
           <FilterGroup title="Department">
             <SelectFilter value={dept} onChange={setDept} options={[["", "All"], ...departments.map((d) => [d.id, d.name])]} testid="filter-department" />
           </FilterGroup>
-          <FilterGroup title="Brand">
-            <SelectFilter value={brand} onChange={setBrand} options={[["", "All"], ...brands.map((b) => [b.id, b.name])]} testid="filter-brand" />
-          </FilterGroup>
-          <FilterGroup title="Max price">
-            <input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="$" className="w-full border-2 border-zinc-200 focus:border-black px-3 py-2 outline-none" data-testid="filter-max-price" />
-          </FilterGroup>
-          <Btn variant="outline" onClick={clearFilters} className="w-full !px-3 !py-2 text-sm" data-testid="clear-filters">Clear filters</Btn>
-        </aside>
-
+         
+<SelectFilter 
+  value={dept} 
+  onChange={setDept} 
+  options={departments.length > 0 ? [["", "All"], ...departments.map((d) => [d.id, d.name])] : [["", "Loading..."]]} 
+  testid="filter-department" 
+/>
         <div>
           <div className="flex justify-between items-center mb-6">
             <p className="font-mono text-sm text-zinc-500 uppercase">{products ? `${products.length} items` : ""}</p>
