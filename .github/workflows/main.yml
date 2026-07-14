@@ -1,22 +1,12 @@
-name: Run Database Cleanup
-on: [workflow_dispatch]
-
-jobs:
-  cleanup:
+cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: pip install motor
+      # This step will show you exactly what files are in the repository
+      - name: List files to debug path
+        run: ls -R
 
       - name: Run cleanup script
-        env:
-          PYTHONPATH: backend
         run: python backend/scripts/purge_test_data.py
