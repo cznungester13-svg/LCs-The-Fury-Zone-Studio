@@ -24,6 +24,7 @@ jobs:
           pip install motor
 
       - name: Run cleanup script
+        working-directory: .
         env:
-          PYTHONPATH: ${{ github.workspace }}/backend
+          PYTHONPATH: ${{ github.workspace }}
         run: python backend/scripts/purge_test_data.py
