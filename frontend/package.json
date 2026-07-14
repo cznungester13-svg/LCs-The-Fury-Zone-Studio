@@ -32,6 +32,7 @@
     "@radix-ui/react-toggle-group": "1.1.7",
     "@radix-ui/react-tooltip": "1.2.4",
     "@tanstack/react-query": "5.56.2",
+    "ajv": "^6.12.6",
     "axios": "1.16.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -60,10 +61,10 @@
     "vaul": "1.1.2",
     "zod": "3.24.4"
   },
-  "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test"
+ "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:file": "eslint",
+    "lint:all": "eslint ."
   },
   "browserslist": {
     "production": [
