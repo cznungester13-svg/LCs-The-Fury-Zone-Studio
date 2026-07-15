@@ -1,156 +1,193 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Star, Minus, Plus, ShoppingCart, ArrowLeft, Truck, ShieldCheck, RotateCcw } from "lucide-react";
-import { api, currency } from "../lib/api";
-import { useCart } from "../context/CartContext";
-import { ProductCard } from "../components/ProductCard";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import api, { imgUrl } from "@/lib/api";
+import { Btn, Badge, Spinner } from "@/components/common";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { Heart, ShoppingCart } from "lucide-react";
+
+// Dedicated Reviews UI Section inside the same file or exported
+export function ReviewsSection({ reviews, rating, setRating, comment, setComment, onSubmit, user }) {
+  return (
+    <div className="mt-12 border-t border-zinc-200 pt-10">
+      <h2 className="text-2xl font-black uppercase tracking-tight mb-6">Customer Reviews ({reviews.length})</h2>
+      
+      {user ? (
+        <form onSubmit={onSubmit} className="mb-8 bg-zinc-50 p-6 border border-zinc-200">
+          <h3 className="font-bold uppercase text-sm mb-4">Leave a Review</h3>
+          <div className="flex gap-2 mb-4">
+            {[1, 2, 3, 4, 5].map((num) => (
+              <button
+                type="button"
+                key={num}
+                onClick={() => setRating(num)}
+                className={`text-xl ${num <= rating ? "text-yellow-500" : "text-zinc-300"}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Write your review here..."
+            className="w-full p-3 border border-zinc-300 focus:outline-none focus:border-black min-h-[100px] bg-white text-sm"
+            required
+          />
+          <Btn type="submit" className="mt-3 text-xs uppercase tracking-wider">Submit Review</Btn>
+        </form>
+      ) : (
+        <p className="text-zinc-500 text-sm italic mb-8">Please login to write a review.</p>
+      )}
+
+      <div className="space-y-4">
+        {reviews.length === 0 ? (
+          <p className="text-zinc-500 text-sm">No reviews yet. Be the first to review this product!</p>
+        ) : (
+          reviews.map((rev) => (
+            <div key={rev.id} className="border-b border-zinc-100 pb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-yellow-500">{"★".repeat(rev.rating)}</span>
+                <span className="font-mono text-xs text-zinc-400">by {rev.user_name || "Anonymous"}</span>
+              </div>
+              <p className="text-zinc-700 text-sm">{rev.comment}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  
   const [product, setProduct] = useState(null);
-  const [related, setRelated] = useState([]);
-  const [qty, setQty] = useState(1);
-  const [notFound, setNotFound] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [inWishlist, setInWishlist] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const loadReviews = () => {
+    api.get(`/reviews?target_id=${id}&target_type=product`)
+      .then(({ data }) => setReviews(data))
+      .catch((err) => console.error("Failed to load reviews", err));
+  };
 
   useEffect(() => {
-    setQty(1);
-    window.scrollTo(0, 0);
-    api
-      .get(`/products/${id}`)
-      .then((r) => {
-        setProduct(r.data);
-        return api.get("/products", { params: { category: r.data.category } });
+    setLoading(true);
+    Promise.all([
+      api.get(`/products/${id}`),
+      api.get(`/wishlist/check/${id}`).catch(() => ({ data: { in_wishlist: false } }))
+    ])
+      .then(([{ data: prodData }, { data: wishData }]) => {
+        setProduct(prodData);
+        setInWishlist(wishData.in_wishlist);
       })
-      .then((r) => setRelated(r.data.filter((p) => p.id !== id).slice(0, 5)))
-      .catch(() => setNotFound(true));
+      .catch((err) => {
+        toast.error("Could not fetch product details");
+        console.error(err);
+      })
+      .finally(() => setLoading(false));
+
+    loadReviews();
   }, [id]);
 
-  if (notFound) {
-    return (
-      <div className="py-32 text-center" data-testid="product-not-found">
-        <p className="font-display text-2xl font-bold">Product not found</p>
-        <Link to="/shop" className="mt-4 inline-block text-primary hover:underline">Back to shop</Link>
-      </div>
-    );
-  }
+  const handleAddToCart = async () => {
+    if (!user) return toast.error("Please login to purchase items");
+    try {
+      await addToCart({ item_type: "product", item_id: product.id, quantity: 1 });
+      toast.success("Added to cart");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Could not add to cart");
+    }
+  };
 
-  if (!product) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-        <div className="grid gap-10 md:grid-cols-2">
-          <div className="aspect-square animate-pulse rounded-3xl bg-secondary" />
-          <div className="space-y-4">
-            <div className="h-8 w-3/4 animate-pulse rounded bg-secondary" />
-            <div className="h-6 w-1/2 animate-pulse rounded bg-secondary" />
-            <div className="h-24 animate-pulse rounded bg-secondary" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const toggleWishlist = async () => {
+    if (!user) return toast.error("Please login to use your wishlist");
+    try {
+      if (inWishlist) {
+        await api.delete(`/wishlist/${id}`);
+        setInWishlist(false);
+        toast.success("Removed from wishlist");
+      } else {
+        await api.post(`/wishlist`, { product_id: id });
+        setInWishlist(true);
+        toast.success("Added to wishlist");
+      }
+    } catch (e) {
+      toast.error("Failed to update wishlist");
+    }
+  };
 
-  const discount = product.original_price
-    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    : 0;
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!user) return toast.error("Please login to submit a review");
+    if (!comment.trim()) return toast.error("Review comment cannot be empty");
+
+    try {
+      await api.post("/reviews", { 
+        target_id: id, 
+        target_type: "product", 
+        rating, 
+        comment: comment.trim() 
+      });
+      setComment("");
+      setRating(5);
+      toast.success("Review posted successfully!");
+      loadReviews();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Failed to post review");
+    }
+  };
+
+  if (loading) return <Spinner />;
+  if (!product) return <div className="text-center py-20 font-bold uppercase">Product Not Found</div>;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8" data-testid="product-detail-page">
-      <button onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground" data-testid="back-button">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="grid md:grid-cols-2 gap-10">
+        <div className="border-2 border-black overflow-hidden aspect-square bg-zinc-100">
+          <img 
+            src={product.image ? imgUrl(product.image) : "/placeholder-product.jpg"} 
+            alt={product.name} 
+            className="w-full h-full object-cover" 
+          />
+        </div>
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-3xl border border-border bg-secondary"
-        >
-          <img src={product.image} alt={product.name} className="aspect-square w-full object-cover" data-testid="product-image" />
-          {discount > 0 && (
-            <span className="absolute left-4 top-4 rounded-md bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
-              Save {discount}%
-            </span>
-          )}
-        </motion.div>
+        <div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter">{product.name}</h1>
+          <p className="text-4xl font-black mt-5">${Number(product.price || 0).toFixed(2)}</p>
+          <p className="text-zinc-600 mt-4 leading-relaxed">{product.description}</p>
 
-        <div className="flex flex-col">
-          <Link to={`/shop?category=${product.category}`} className="text-xs font-bold uppercase tracking-widest text-primary">
-            {product.seller}
-          </Link>
-          <h1 className="font-display mt-2 text-3xl font-bold leading-tight tracking-tight sm:text-4xl" data-testid="product-name">
-            {product.name}
-          </h1>
-
-          <div className="mt-3 flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className={`h-4 w-4 ${i < Math.round(product.rating) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
-              ))}
-            </div>
-            <span className="text-sm font-semibold">{product.rating}</span>
-            <span className="text-sm text-muted-foreground">({product.reviews.toLocaleString()} reviews)</span>
-          </div>
-
-          <div className="mt-5 flex items-baseline gap-3">
-            <span className="font-display text-4xl font-extrabold" data-testid="product-price">{currency(product.price)}</span>
-            {product.original_price && (
-              <span className="text-lg text-muted-foreground line-through">{currency(product.original_price)}</span>
-            )}
-          </div>
-
-          <p className="mt-5 leading-relaxed text-muted-foreground">{product.description}</p>
-
-          <p className="mt-4 text-sm font-medium text-emerald-600">
-            {product.stock > 0 ? `In stock — ${product.stock} available` : "Out of stock"}
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <div className="flex items-center rounded-full border border-border">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary" data-testid="qty-decrease">
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="w-10 text-center font-semibold" data-testid="qty-value">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary" data-testid="qty-increase">
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-            <button
-              onClick={() => addItem(product, qty)}
-              data-testid="add-to-cart-detail"
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-primary/90 active:scale-95 min-w-[200px]"
+          <div className="mt-6 flex gap-3">
+            <Btn onClick={handleAddToCart} className="flex-1">
+              <ShoppingCart size={18} /> Add to cart
+            </Btn>
+            <button 
+              onClick={toggleWishlist}
+              className={`p-3 border-2 border-black transition-colors ${inWishlist ? 'bg-black text-white' : 'bg-white text-black hover:bg-zinc-100'}`}
+              aria-label="Toggle Wishlist"
             >
-              <ShoppingCart className="h-5 w-5" /> Add to Cart
+              <Heart size={20} fill={inWishlist ? "currentColor" : "none"} />
             </button>
-          </div>
-
-          <div className="mt-8 grid grid-cols-3 gap-4 border-t border-border pt-6 text-center">
-            {[
-              { icon: Truck, label: "Free shipping over $75" },
-              { icon: ShieldCheck, label: "Secure checkout" },
-              { icon: RotateCcw, label: "30-day returns" },
-            ].map((f) => (
-              <div key={f.label} className="flex flex-col items-center gap-2">
-                <f.icon className="h-5 w-5 text-primary" />
-                <span className="text-xs text-muted-foreground">{f.label}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {related.length > 0 && (
-        <section className="mt-20">
-          <h2 className="font-display mb-6 text-2xl font-bold tracking-tight">You might also like</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-            {related.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
-            ))}
-          </div>
-        </section>
-      )}
+      <ReviewsSection 
+        reviews={reviews} 
+        rating={rating} 
+        setRating={setRating} 
+        comment={comment} 
+        setComment={setComment} 
+        onSubmit={submitReview} 
+        user={user} 
+      />
     </div>
   );
 }

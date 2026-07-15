@@ -1,226 +1,141 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Search, ArrowRight, Truck, ShieldCheck, RotateCcw, Store } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../lib/api";
-import { ProductCard } from "../components/ProductCard";
+import { ArrowRight, Zap, Tag, ShieldCheck } from "lucide-react";
+// Fix: Correct path alias mapping by shifting to relative directory structures
+import api from "../lib/api";
+import { ProductCard, ListingCard } from "../components/cards";
+import { Btn, Spinner } from "../components/common";
 
-const HERO_IMAGES = [
-  "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
-  "https://images.unsplash.com/photo-1608231387042-66d1773070a5?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
-  "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
-  "https://images.unsplash.com/photo-1649810617979-16001a60c89c?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
-];
-
-const TRUST = [
-  { icon: Truck, title: "Free shipping", sub: "On orders over $75" },
-  { icon: ShieldCheck, title: "Secure payment", sub: "256-bit encryption" },
-  { icon: RotateCcw, title: "Easy returns", sub: "30-day guarantee" },
-  { icon: Store, title: "10,000+ sellers", sub: "Brands & makers" },
-];
+const HERO = "https://images.pexels.com/photos/29548609/pexels-photo-29548609.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
+const SELL_IMG = "https://images.pexels.com/photos/11317811/pexels-photo-11317811.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [q, setQ] = useState("");
-  const navigate = useNavigate();
+  const [featured, setFeatured] = useState(null);
+  const [listings, setListings] = useState(null);
 
   useEffect(() => {
-    api.get("/products").then((r) => setProducts(r.data));
-    api.get("/categories").then((r) => setCategories(r.data));
+    api.get("/products?featured=true&limit=4").then(({ data }) => setFeatured(data)).catch(() => setFeatured([]));
+    api.get("/listings?limit=4").then(({ data }) => setListings(data)).catch(() => setListings([]));
   }, []);
 
-  const submit = (e) => {
-    e.preventDefault();
-    navigate(`/shop?search=${encodeURIComponent(q)}`);
-  };
-
-  const trending = products.slice(0, 5);
-  const deals = products.filter((p) => p.original_price).slice(0, 5);
-
   return (
-    <div data-testid="home-page">
+    <div>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border bg-secondary/40">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:px-8 md:py-24">
+      <section className="border-b-2 border-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
           <div>
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary"
-            >
-              Summer Drop — Up to 40% off
-            </motion.span>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="font-display mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl"
-            >
-              Everything you love,<br />
-              <span className="text-primary">all in one Zone.</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mt-5 max-w-md text-base text-muted-foreground"
-            >
-              Shop millions of products from top brands and independent makers — electronics, fashion, handmade goods and more.
-            </motion.p>
-
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              onSubmit={submit}
-              className="mt-8"
-              data-testid="hero-search-form"
-            >
-              <div className="relative max-w-md">
-                <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="What are you looking for?"
-                  data-testid="hero-search-input"
-                  className="h-14 w-full rounded-full border-2 border-foreground bg-white pl-12 pr-32 text-base outline-none focus:ring-4 focus:ring-primary/15"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1.5 flex h-11 items-center gap-1 rounded-full bg-primary px-5 text-sm font-bold text-white transition-all hover:bg-primary/90 active:scale-95"
-                >
-                  Search
-                </button>
-              </div>
-            </motion.form>
-
-            <div className="mt-6 flex flex-wrap gap-2 text-sm">
-              <span className="text-muted-foreground">Popular:</span>
-              {["Headphones", "Sneakers", "Candles", "Serum"].map((t) => (
-                <Link key={t} to={`/shop?search=${t}`} className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline">
-                  {t}
-                </Link>
-              ))}
+            <span className="font-mono uppercase text-xs tracking-[0.3em] text-[#FF3B30]">Shop new · Sell used · Instant</span>
+            <h1 className="font-head text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter uppercase leading-[0.9] mt-4">
+              Enter the<br /><span className="text-[#FF3B30]">Fury</span> Zone
+            </h1>
+            <p className="text-lg text-zinc-600 mt-6 max-w-md">
+              A marketplace with attitude. Cop fresh gear from the store, or flip your used pieces — listings go live instantly.
+            </p>
+            <div className="flex flex-wrap gap-4 mt-8">
+              <Link to="/store"><Btn data-testid="hero-shop-btn">Shop the store <ArrowRight size={18} /></Btn></Link>
+              <Link to="/sell"><Btn variant="secondary" data-testid="hero-sell-btn">Sell an item</Btn></Link>
             </div>
           </div>
+          <div className="relative">
+            <div className="border-2 border-black brutal-shadow overflow-hidden">
+              <img src={HERO} alt="Fury Zone" className="w-full h-[420px] object-cover" />
+            </div>
+            <div className="absolute -bottom-4 -left-4 bg-[#FF3B30] text-white border-2 border-black px-5 py-3 font-black uppercase tracking-tight">
+              Drop 001 live
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="grid grid-cols-2 gap-4"
-          >
-            {HERO_IMAGES.map((src, i) => (
-              <div
-                key={i}
-                className={`overflow-hidden rounded-2xl border border-border bg-white ${i % 2 ? "mt-8" : ""}`}
+{/* Department Grid Navigation Tiles */}
+      {departments.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
+          <div className="border-b-2 border-black pb-3 mb-8">
+            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">Shop by Department</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {departments.map((d) => (
+              <Link 
+                key={d.id} 
+                to={`/store?department=${d.slug}`}
+                className="group relative border-2 border-black brutal-shadow bg-white overflow-hidden aspect-[4/3] block"
               >
-                <img src={src} alt="Featured product" className="aspect-square w-full object-cover transition-transform duration-500 hover:scale-105" />
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Trust bar */}
-      <section className="border-b border-border bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-6 md:grid-cols-4 md:px-8">
-          {TRUST.map((t) => (
-            <div key={t.title} className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
-                <t.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-sm font-bold">{t.title}</p>
-                <p className="text-xs text-muted-foreground">{t.sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Browse</p>
-            <h2 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Shop by category</h2>
-          </div>
-          <Link to="/shop" className="hidden items-center gap-1 text-sm font-semibold text-primary hover:gap-2 md:flex transition-all">
-            View all <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((c, i) => (
-            <Link
-              key={c.id}
-              to={`/shop?category=${c.id}`}
-              data-testid={`category-${c.id}`}
-              className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-border"
-            >
-              <img src={c.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-4">
-                <h3 className="font-display text-lg font-bold text-white">{c.name}</h3>
-                <p className="text-xs text-white/70">{c.count} items</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Promo banner */}
-      <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-foreground px-8 py-14 text-white md:px-16">
-          <div className="relative z-10 max-w-lg">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Limited time</p>
-            <h2 className="font-display mt-3 text-3xl font-extrabold sm:text-4xl">Mega Deals Week is live 🔥</h2>
-            <p className="mt-3 text-white/70">Save big across every category. New markdowns dropping daily — grab them before they're gone.</p>
-            <Link
-              to="/shop?sort=price_asc"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-bold transition-all hover:bg-primary/90 active:scale-95"
-            >
-              Shop the deals <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="pointer-events-none absolute -right-10 top-1/2 hidden h-72 w-72 -translate-y-1/2 rounded-full bg-primary/30 blur-3xl md:block" />
-        </div>
-      </section>
-
-      {/* Trending */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Hot right now</p>
-            <h2 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Trending products</h2>
-          </div>
-          <Link to="/shop" className="hidden items-center gap-1 text-sm font-semibold text-primary hover:gap-2 md:flex transition-all">
-            View all <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-          {trending.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Deals */}
-      {deals.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-4 md:px-8">
-          <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Save now</p>
-            <h2 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Today's best deals</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-            {deals.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
+                {d.image ? (
+                  <img 
+                    src={d.image} 
+                    alt={d.name} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-100 flex items-center justify-center font-mono text-zinc-400 text-xs">
+                    NO IMAGE AVAILABLE
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 border-t-2 border-black bg-white p-3 transform transition-transform group-hover:bg-[#FF3B30] group-hover:text-white">
+                  <p className="font-black uppercase text-sm sm:text-base tracking-tight truncate flex items-center justify-between">
+                    {d.name}
+                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         </section>
       )}
+
+      {/* Featured products */}
+      <Section title="Featured Store Drops" link="/store" linkLabel="All products">
+        {featured === null ? <Spinner /> : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+          </div>
+        )}
+      </Section>
+
+      {/* Sell CTA */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
+        <div className="grid md:grid-cols-2 border-2 border-black brutal-shadow overflow-hidden">
+          <div className="p-10 flex flex-col justify-center bg-[#FF3B30] text-white">
+            <h2 className="text-4xl font-black uppercase tracking-tighter">Got stuff to flip?</h2>
+            <p className="mt-3 text-white/90 max-w-sm">Turn your closet into cash. Snap photos, set a price, and your listing hits the marketplace instantly.</p>
+            <Link to="/sell" className="mt-6"><Btn variant="secondary" data-testid="cta-sell-btn">Start selling</Btn></Link>
+          </div>
+          <img src={SELL_IMG} alt="Sell" className="h-72 md:h-auto w-full object-cover" />
+        </div>
+      </section>
+
+      {/* Resale listings */}
+      <Section title="Fresh Resale Finds" link="/marketplace" linkLabel="All resale">
+        {listings === null ? <Spinner /> : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {listings.map((l) => <ListingCard key={l.id} listing={l} />)}
+          </div>
+        )}
+      </Section>
     </div>
+  );
+}
+
+function Feature({ icon: Icon, title, text }) {
+  return (
+    <div className="py-8 px-6 flex gap-4">
+      <Icon className="text-[#FF3B30] shrink-0" size={28} />
+      <div>
+        <h3 className="font-black uppercase tracking-tight">{title}</h3>
+        <p className="text-zinc-400 text-sm mt-1">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, link, linkLabel, children }) {
+  return (
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
+      <div className="flex items-end justify-between mb-8 border-b-2 border-black pb-3">
+        <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">{title}</h2>
+        <Link to={link} className="font-bold uppercase text-sm hover:text-[#FF3B30] flex items-center gap-1">{linkLabel} <ArrowRight size={16} /></Link>
+      </div>
+      {children}
+    </section>
   );
 }

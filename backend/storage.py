@@ -89,8 +89,11 @@ async def upload(file: UploadFile = File(...), user: dict = Depends(get_current_
         "is_deleted": False,
         "created_at": now_iso(),
     })
-    return {"path": result["path"], "url": f"/api/files/{result['path']}"}
-
+backend_url = os.environ.get("PUBLIC_BASE", "").rstrip("/")
+    return {
+        "path": result["path"], 
+        "url": f"{backend_url}/api/files/{result['path']}"
+    }
 
 @router.get("/files/{path:path}")
 async def serve_file(path: str):

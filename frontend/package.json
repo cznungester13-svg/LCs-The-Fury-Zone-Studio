@@ -118,6 +118,12 @@
     "resolve-url-loader": "5.0.0",
     "**/resolve-url-loader/postcss": "8.5.10",
     "**/axios/form-data": "4.0.4",
+    "**/jest-util/picomatch": "2.3.2",
+    "**/tinyglobby/picomatch": "4.0.4",
+    "ajv": "6.12.6",
+    "ajv-keywords": "3.4.1"
+  },
+  "packageManager": "yarn@..."
     "**/jsdom/form-data": "3.0.4",
     "**/postcss-svgo/svgo": "2.8.1",
     "**/webpack-dev-server/ws": "8.20.1",
