@@ -1,4 +1,4 @@
-import os
+nano requirements.txtimport os
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
@@ -11,12 +11,16 @@ from database import db, now_iso, NO_ID
 from auth import get_current_user
 from notify import create_notification, log_event
 from emailer import send_email, order_confirmation_html
+<<<<<<< HEAD
 
 router = APIRouter(prefix="/api", tags=["shop"])
 COMMISSION = float(os.environ.get("PLATFORM_COMMISSION_RATE", "0.10"))
 
 # ---------------- Cart & Utils (Kept the same) ----------------
 # [Keep all your existing get_or_create_cart, cart routes, wishlist, etc., here]
+=======
+s
+>>>>>>> 8f1abd3 (Manual backup before codespace deletion)
 
 # ---------------- Checkout & Payments (Updated) ----------------
 class CheckoutRequest(BaseModel):
@@ -80,4 +84,25 @@ async def paypal_webhook(request: Request):
             )
             txn = await db.payment_transactions.find_one({"session_id": order_id}, NO_ID)
             await _fulfill_order(txn)
+<<<<<<< HEAD
     return {"received": True}
+=======
+    return {{"received": True}}
+
+
+# ---------------- Orders ----------------
+@router.get("/orders")
+async def my_orders(user: dict = Depends(get_current_user)):
+    return await db.orders.find({{"user_id": user["id"]}}, NO_ID).sort("created_at", -1).to_list(200)
+
+
+@router.get("/orders/{order_id}")
+async def get_order(order_id: str, user: dict = Depends(get_current_user)):
+    o = await db.orders.find_one({{"id": order_id}}, NO_ID)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if o["user_id"] != user["id"] and "admin" not in user.get("roles", []):
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return o
+stripe>=10.0.0
+>>>>>>> 8f1abd3 (Manual backup before codespace deletion)
