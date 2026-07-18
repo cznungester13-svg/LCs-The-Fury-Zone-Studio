@@ -7,66 +7,55 @@ import { useCart } from "../context/CartContext";
 
 export const ProductCard = ({ product, index = 0 }) => {
   const { addItem } = useCart();
-  const discount = product.original_price
-    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    : 0;
+  
+  // Calculate raw savings amount for the "Save $X" badge
+  const savings = product.original_price ? (product.original_price - product.price).toFixed(2) : 0;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: (index % 5) * 0.06 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+      transition={{ duration: 0.3, delay: (index % 5) * 0.05 }}
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:shadow-lg"
       data-testid={`product-card-${product.id}`}
     >
-      <Link to={`/product/${product.id}`} className="relative block aspect-square overflow-hidden bg-secondary">
+      <Link to={`/product/${product.id}`} className="relative block aspect-square overflow-hidden bg-gray-100">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-          {product.badge && (
-            <span className="rounded-md bg-black px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              {product.badge}
-            </span>
-          )}
-          {discount > 0 && (
-            <span className="rounded-md bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              -{discount}%
-            </span>
-          )}
-        </div>
+        {/* Save Badge */}
+        {savings > 0 && (
+          <div className="absolute left-2 top-2 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            Save ${savings}
+          </div>
+        )}
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{product.seller}</p>
+      <div className="flex flex-1 flex-col p-2.5">
         <Link to={`/product/${product.id}`}>
-          <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+          <h3 className="line-clamp-2 text-xs font-medium text-gray-800 group-hover:text-orange-600">
             {product.name}
           </h3>
         </Link>
 
-        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          <span className="font-semibold text-foreground">{product.rating}</span>
-          <span>({product.reviews.toLocaleString()})</span>
+        {/* Rating & Sold Count */}
+        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-gray-500">
+          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <span className="font-bold text-gray-900">{product.rating}</span>
+          <span className="ml-1">{product.soldCount}+ sold</span>
         </div>
 
-        <div className="mt-auto flex items-end justify-between pt-3">
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-lg font-bold text-foreground">{currency(product.price)}</span>
-            {product.original_price && (
-              <span className="text-xs text-muted-foreground line-through">{currency(product.original_price)}</span>
-            )}
-          </div>
+        {/* Price & Add to Cart */}
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-sm font-bold text-gray-900">{currency(product.price)}</span>
           <button
             onClick={() => addItem(product)}
             aria-label="Add to cart"
-            data-testid={`add-to-cart-${product.id}`}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-white transition-all hover:bg-primary active:scale-90"
+            className="rounded-full bg-orange-500 p-2 text-white transition-transform hover:scale-105 active:scale-95"
           >
             <Plus className="h-4 w-4" />
           </button>
