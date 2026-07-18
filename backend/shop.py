@@ -1,108 +1,180 @@
-nano requirements.txtimport os
-import uuid
-from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
-from typing import Optional
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { api } from "../lib/api";
+import { ProductCard } from "../components/ProductCard";
+import { SlidersHorizontal } from "lucide-react";
 
-# REPLACE YOUR STRIPE IMPORT WITH YOUR NEW PAYPAL SERVICE
-from emergentintegrations.payments.paypal.checkout import PayPalCheckout
+const CATS = [
+  { id: "all", name: "All" },
+  { id: "electronics", name: "Electronics" },
+  { id: "fashion", name: "Fashion" },
+  { id: "home", name: "Home & Living" },
+  { id: "handmade", name: "Handmade" },
+  { id: "beauty", name: "Beauty" },
+];
 
-from database import db, now_iso, NO_ID
-from auth import get_current_user
-from notify import create_notification, log_event
-from emailer import send_email, order_confirmation_html
-<<<<<<< HEAD
+export default function Shop() {
+  const [params, setParams] = useSearchParams();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-router = APIRouter(prefix="/api", tags=["shop"])
-COMMISSION = float(os.environ.get("PLATFORM_COMMISSION_RATE", "0.10"))
+  const category = params.get("category") || "all";
+  const search = params.get("search") || "";
+  const sort = params.get("sort") || "";
 
-# ---------------- Cart & Utils (Kept the same) ----------------
-# [Keep all your existing get_or_create_cart, cart routes, wishlist, etc., here]
-=======
-s
->>>>>>> 8f1abd3 (Manual backup before codespace deletion)
+  useEffect(() => {
+    setLoading(true);
 
-# ---------------- Checkout & Payments (Updated) ----------------
-class CheckoutRequest(BaseModel):
-    origin_url: str
-    coupon_code: Optional[str] = None
-    address_id: Optional[str] = None
+    const query = {};
 
-def paypal_client() -> PayPalCheckout:
-    return PayPalCheckout(
-        client_id=os.environ["PAYPAL_CLIENT_ID"],
-        secret=os.environ["PAYPAL_SECRET"]
-    )
+    if (category !== "all") query.category = category;
+    if (search) query.search = search;
+    if (sort) query.sort = sort;
 
-@router.post("/checkout/session")
-async def create_checkout(body: CheckoutRequest, user: dict = Depends(get_current_user)):
-    cart = await get_or_create_cart(user["id"])
-    if not cart["items"]:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-    
-    subtotal = sum(i["price"] * i["quantity"] for i in cart["items"])
-    discount = 0.0
-    coupon_code = None
-    if body.coupon_code:
-        c = await db.coupons.find_one({"code": body.coupon_code.upper(), "active": True}, NO_ID)
-        if c:
-            discount = round(subtotal * (c.get("percent_off", 0) / 100.0), 2)
-            coupon_code = c["code"]
-    total = max(round(subtotal - discount, 2), 0.5)
+    api
+      .get("/products", { params: query })
+      .then((r) => {
+        setProducts(r.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [category, search, sort]);
 
-    # Initialize PayPal checkout
-    paypal = paypal_client()
-    order_data = await paypal.create_order(amount=float(total), currency="USD")
-    order_id = order_data["id"]
+  const setParam = (key, value) => {
+    const next = new URLSearchParams(params);
 
-    await db.payment_transactions.insert_one({
-        "id": str(uuid.uuid4()),
-        "session_id": order_id,
-        "user_id": user["id"],
-        "amount": float(total),
-        "payment_status": "initiated",
-        "order_created": False,
-        "created_at": now_iso(),
-    })
-    
-    # Return approval link to frontend
-    approval_url = next(link["href"] for link in order_data["links"] if link["rel"] == "approve")
-    return {"url": approval_url, "session_id": order_id}
+    if (value) next.set(key, value);
+    else next.delete(key);
 
-# [Keep your existing _fulfill_order function, but update webhook logic below]
+    setParams(next);
+  };
 
-@router.post("/webhook/paypal")
-async def paypal_webhook(request: Request):
-    payload = await request.json()
-    # Verify event type (e.g., 'CHECKOUT.ORDER.APPROVED')
-    if payload.get("event_type") == "CHECKOUT.ORDER.APPROVED":
-        order_id = payload["resource"]["id"]
-        txn = await db.payment_transactions.find_one({"session_id": order_id}, NO_ID)
-        if txn and not txn.get("order_created"):
-            await db.payment_transactions.update_one(
-                {"session_id": order_id}, {"$set": {"payment_status": "paid"}}
-            )
-            txn = await db.payment_transactions.find_one({"session_id": order_id}, NO_ID)
-            await _fulfill_order(txn)
-<<<<<<< HEAD
-    return {"received": True}
-=======
-    return {{"received": True}}
+  return (
+    <div
+      className="mx-auto max-w-7xl px-4 py-10 md:px-8"
+      data-testid="shop-page"
+    >
+
+      <div className="mb-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          {search
+            ? `Results for "${search}"`
+            : CATS.find((c) => c.id === category)?.name || "Shop"}
+        </h1>
+
+        <p
+          className="mt-1 text-sm text-muted-foreground"
+          data-testid="results-count"
+        >
+          {loading ? "Loading…" : `${products.length} products`}
+        </p>
+      </div>
 
 
-# ---------------- Orders ----------------
-@router.get("/orders")
-async def my_orders(user: dict = Depends(get_current_user)):
-    return await db.orders.find({{"user_id": user["id"]}}, NO_ID).sort("created_at", -1).to_list(200)
+      <div className="mb-8 flex flex-wrap items-center gap-2">
+
+        {CATS.map((c) => (
+          <button
+            key={c.id}
+            onClick={() =>
+              setParam("category", c.id === "all" ? "" : c.id)
+            }
+            data-testid={`filter-${c.id}`}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+              category === c.id
+                ? "bg-foreground text-white"
+                : "border border-border bg-white text-muted-foreground hover:border-foreground hover:text-foreground"
+            }`}
+          >
+            {c.name}
+          </button>
+        ))}
 
 
-@router.get("/orders/{order_id}")
-async def get_order(order_id: str, user: dict = Depends(get_current_user)):
-    o = await db.orders.find_one({{"id": order_id}}, NO_ID)
-    if not o:
-        raise HTTPException(status_code=404, detail="Order not found")
-    if o["user_id"] != user["id"] and "admin" not in user.get("roles", []):
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return o
-stripe>=10.0.0
->>>>>>> 8f1abd3 (Manual backup before codespace deletion)
+        <div className="ml-auto flex items-center gap-2">
+
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+
+          <select
+            value={sort}
+            onChange={(e) => setParam("sort", e.target.value)}
+            data-testid="sort-select"
+            className="rounded-full border border-border bg-white px-3 py-2 text-sm font-medium outline-none focus:border-foreground"
+          >
+            <option value="">Featured</option>
+            <option value="price_asc">
+              Price: Low to High
+            </option>
+            <option value="price_desc">
+              Price: High to Low
+            </option>
+            <option value="rating">
+              Top Rated
+            </option>
+          </select>
+
+        </div>
+
+      </div>
+
+
+
+      {loading ? (
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+
+          {Array.from({ length: 12 }).map((_, i) => (
+
+            <div
+              key={i}
+              className="aspect-[3/4] animate-pulse rounded-2xl bg-secondary"
+            />
+
+          ))}
+
+        </div>
+
+
+      ) : products.length === 0 ? (
+
+        <div
+          className="py-24 text-center"
+          data-testid="empty-state"
+        >
+
+          <p className="font-display text-2xl font-bold">
+            No products found
+          </p>
+
+          <p className="mt-2 text-muted-foreground">
+            Try a different category or search term.
+          </p>
+
+        </div>
+
+
+      ) : (
+
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+
+          {products.map((p, i) => (
+
+            <ProductCard
+              key={p.id}
+              product={p}
+              index={i}
+            />
+
+          ))}
+
+        </div>
+
+
+      )}
+
+    </div>
+  );
+}
