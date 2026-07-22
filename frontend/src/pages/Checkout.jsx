@@ -25,12 +25,21 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
-      const res = await api.post("/orders", {
-        items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
-        ...form,
-      });
-      setOrder(res.data);
-      clearCart();
+   const res = await api.post("/checkout/session", {
+  items: items.map((i) => ({
+    id: i.id,
+    name: i.name,
+    price: i.price,
+    quantity: i.quantity,
+    image: i.image
+  })),
+  ...form,
+});
+if (res.data?.approval_url) {
+  window.location.href = res.data.approval_url;
+} else {
+  toast.error("Unable to start PayPal checkout.");
+}   
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -102,7 +111,7 @@ export default function Checkout() {
               <Lock className="h-4 w-4 text-primary" /> Payment
             </h2>
             <p className="mt-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Demo mode — this is a mock checkout. No real payment is processed and no card details are collected.
+             Pay securely with PayPal. You will be redirected to PayPal to complete your payment.
             </p>
           </div>
 
@@ -112,7 +121,7 @@ export default function Checkout() {
             data-testid="place-order-button"
             className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-bold text-white transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
           >
-            {loading ? "Placing order…" : `Place order · ${currency(total)}`}
+            {loading ? "Redirecting to PayPal…" : `Pay with PayPal · ${currency(total)}`}
           </button>
         </form>
 
