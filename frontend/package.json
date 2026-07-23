@@ -32,7 +32,7 @@
     "@radix-ui/react-toggle-group": "1.1.7",
     "@radix-ui/react-tooltip": "1.2.4",
     "@tanstack/react-query": "5.56.2",
-    "ajv": "^6.12.6",
+    "ajv": "6.12.6",
     "axios": "1.16.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -61,7 +61,7 @@
     "vaul": "1.1.2",
     "zod": "3.24.4"
   },
- "scripts": {
+  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:file": "eslint",
     "lint:all": "eslint ."
@@ -121,9 +121,7 @@
     "**/jest-util/picomatch": "2.3.2",
     "**/tinyglobby/picomatch": "4.0.4",
     "ajv": "6.12.6",
-    "ajv-keywords": "3.4.1"
-  },
-  "packageManager": "yarn@..."
+    "ajv-keywords": "3.4.1",
     "**/jsdom/form-data": "3.0.4",
     "**/postcss-svgo/svgo": "2.8.1",
     "**/webpack-dev-server/ws": "8.20.1",
@@ -140,9 +138,7 @@
     "**/filelist/minimatch": "5.1.8",
     "**/anymatch/picomatch": "2.3.2",
     "**/micromatch/picomatch": "2.3.2",
-    "**/readdirp/picomatch": "2.3.2",
-    "**/jest-util/picomatch": "2.3.2",
-    "**/tinyglobby/picomatch": "4.0.4"
+    "**/readdirp/picomatch": "2.3.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
