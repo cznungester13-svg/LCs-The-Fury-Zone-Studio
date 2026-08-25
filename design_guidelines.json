@@ -1,0 +1,113 @@
+{
+  "theme": {
+    "mode": "light",
+    "name": "Eclectic Thrift / Neo-Brutalist Bazaar",
+    "description": "A high-energy, bargain-hunting e-commerce experience. Uses raw structural elements (hard black borders, flat colors) combined with vibrant neon accents to scream 'Super Low Prices!' and 'Treasure Hunt'. Avoids generic SaaS cleanliness in favor of tactile, flea-market authenticity."
+  },
+  "typography": {
+    "headings": {
+      "fontFamily": "Cabinet Grotesk, Anton, system-ui, sans-serif",
+      "weights": ["800", "900"],
+      "usage": "Use for Hero headings, Department names, and large Price displays. Must be tracking-tight or tracking-tighter."
+    },
+    "body": {
+      "fontFamily": "Satoshi, IBM Plex Sans, Inter, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Use for product descriptions, navigation, and standard text."
+    },
+    "accents": {
+      "fontFamily": "Space Mono, monospace",
+      "usage": "Use for SKUs, 'Condition' tags, or small receipt-like details to enhance the thrift store feel."
+    }
+  },
+  "colors": {
+    "background": {
+      "main": "#F6F5F0",
+      "card": "#FFFFFF",
+      "inverted": "#0A0A0A"
+    },
+    "text": {
+      "primary": "#0A0A0A",
+      "secondary": "#4A4A4A",
+      "inverted": "#F6F5F0"
+    },
+    "borders": {
+      "main": "#0A0A0A",
+      "subtle": "#E5E5E5"
+    },
+    "accents": {
+      "primary": "#FF5C00",
+      "primaryHover": "#E05200",
+      "secondary": "#E5FF00",
+      "tertiary": "#0038FF",
+      "sale": "#FF0055"
+    }
+  },
+  "visual_enhancers": {
+    "borders": "Use 2px solid black (#0A0A0A) borders for all cards, buttons, and inputs.",
+    "shadows": {
+      "default": "4px 4px 0px 0px #0A0A0A",
+      "hover": "6px 6px 0px 0px #0A0A0A",
+      "active": "0px 0px 0px 0px #0A0A0A"
+    },
+    "radii": "Sharp edges (0px) or extremely subtle (2px) - NO pill shapes for standard cards. Buttons can be sharp or slightly rounded depending on hierarchy.",
+    "textures": "Subtle SVG noise overlay on the main background can be used to simulate recycled paper."
+  },
+  "layouts_and_grids": {
+    "hero": "Asymmetrical Bento Grid. A dominant image on the left, smaller promotional blocks (deals, categories) on the right. Heavy use of borders and contrasting neon background colors.",
+    "product_grid": "Dense and highly structured. Responsive: 1 col (mobile), 3 cols (tablet), 4-5 cols (desktop). Gap-4 or Gap-6.",
+    "navigation": "Sticky, solid background (#F6F5F0) with a 2px black bottom border. No glassmorphism here, keep it raw.",
+    "marquee": "Use a marquee (react-fast-marquee) for high-energy text like 'SUPER LOW PRICES • THRIFT FINDS • SUSTAINABLE SHOPPING • NEW ARRIVALS DAILY'. Background: #E5FF00, Text: Black."
+  },
+  "motion_and_interactions": {
+    "hover_states": "Product cards and buttons should translate up and left (-2px, -2px) while expanding the hard shadow from 4px to 6px. Transition should be snappy (0.15s ease-out).",
+    "click_states": "Translate down and right to (0,0), removing the shadow completely to simulate a physical button press.",
+    "page_transitions": "Minimal, keep the focus on snappy browsing."
+  },
+  "component_instructions": {
+    "ProductCard": "White background, 2px black border. Image takes top 60% with a hard border-b-2 separating it from content. Include a loud 'Bargain' or '$X' price tag absolutely positioned over the image.",
+    "Badge": "Sharp corners, black text, bright backgrounds (Yellow, Orange, Blue) for conditions (e.g., 'Like New', 'Heavily Used').",
+    "Button": "Primary CTA uses Safety Orange (#FF5C00) with white text, 2px black border, and brutalist shadow.",
+    "Forms_and_Inputs": "Shadcn components MUST be customized to remove the default rounded-md and soft ring. Replace with 0px radius, 2px black border, and a solid black ring on focus."
+  },
+  "media_and_images": {
+    "rules": "Images should have high contrast. The main agent MUST seed the database with exactly 50 items per category. Use rotating sets of the provided images and programmatically generate names/descriptions so the images match the items described.",
+    "image_urls": {
+      "fashion": [
+        "https://images.unsplash.com/photo-1551232864-3f0890e580d9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHx2aW50YWdlJTIwY2xvdGhlcyUyMHJhY2t8ZW58MHx8fHwxNzg3Njg5MTUxfDA&ixlib=rb-4.1.0&q=85",
+        "https://images.pexels.com/photos/30173375/pexels-photo-30173375.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      ],
+      "electronics": [
+        "https://images.unsplash.com/photo-1520549233664-03f65c1d1327?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxyZXRybyUyMGVsZWN0cm9uaWNzJTIwY2FtZXJhfGVufDB8fHx8MTc4NzY4OTE1MXww&ixlib=rb-4.1.0&q=85",
+        "https://images.pexels.com/photos/3585012/pexels-photo-3585012.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      ],
+      "home_decor": [
+        "https://images.pexels.com/photos/18766291/pexels-photo-18766291.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "https://images.pexels.com/photos/9821471/pexels-photo-9821471.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      ],
+      "books": [
+        "https://images.unsplash.com/photo-1768854721059-f788368d0c59?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwzfHxzZWNvbmQlMjBoYW5kJTIwYm9va3MlMjBzdGFja3xlbnwwfHx8fDE3ODc2ODkxNTF8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1704712828824-6f40a6c821eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxzZWNvbmQlMjBoYW5kJTIwYm9va3MlMjBzdGFja3xlbnwwfHx8fDE3ODc2ODkxNTF8MA&ixlib=rb-4.1.0&q=85"
+      ],
+      "sports_and_toys": [
+        "https://images.unsplash.com/photo-1555597673-b21d5c935865?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxfDB8MXxyYW5kb218MHx8fHx8fHx8MTcxMTU2Nzk3OA&ixlib=rb-4.0.3&q=80&w=1080",
+        "https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxfDB8MXxyYW5kb218MHx8fHx8fHx8MTcxMTU2Nzk3OA&ixlib=rb-4.0.3&q=80&w=1080"
+      ]
+    }
+  },
+  "instructions_to_main_agent": {
+    "data_generation": "CRITICAL: You MUST seed the database with exactly 50 items per department. Write a seeding script that loops 50 times per category. Rotate through the provided image URLs and append index numbers to names (e.g., 'Vintage Denim Jacket 01') to make them unique while matching the images perfectly.",
+    "pricing": "Prices MUST be aggressively low (e.g., $1.99, $4.50, $12.00 max). Emphasize this visually with large typography and 'Discount' badges.",
+    "shadcn_customization": "You MUST override the default Shadcn styles in tailwind.config.js or globals.css. Remove border-radius on cards, replace standard shadows with hard box-shadows (4px 4px 0px #000), and use the high-contrast color palette provided.",
+    "icons": "Use lucide-react but scale them up slightly and use stroke-width 2.5 to match the thick borders of the UI.",
+    "testing": "All interactive and key informational elements MUST include a `data-testid` attribute to facilitate robust automated testing (e.g., data-testid='add-to-cart-button').",
+    "transparency_rule": "DO NOT use complete transparent backgrounds for header, overlays, or dropdowns. Always use solid #FFFFFF or #F6F5F0 with a hard border."
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": {
+    "anti_slop": "Do not make generic centered layouts or uniform styling. Use asymmetrical grids, loud typography, and overlapping layers. Break the 'SaaS' mold.",
+    "animations": "Do not apply 'transition: all'. Apply specific transitions like 'transition: transform 0.15s ease, box-shadow 0.15s ease' to prevent breaking layouts.",
+    "spacing": "Use generous padding (p-6, p-8) inside containers with borders to prevent text collision.",
+    "no_emoji_icons": "NEVER use emoji characters for icons. Use the provided icon library (lucide-react).",
+    "toasts": "Use `sonner` for toasts. Customize the sonner toast to have a 2px solid black border and hard shadow to match the theme."
+  }
+}

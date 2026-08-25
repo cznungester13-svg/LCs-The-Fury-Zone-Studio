@@ -1,0 +1,43 @@
+{
+  "summary": "First full test run of LC Multi-Dept Resale Marketplace (React + FastAPI + MongoDB). Backend: 41 pytest cases across health/seed, products (filter/search/sort/pagination/detail/deals), auth (register/login/me/refresh/logout/validation/bcrypt), cart CRUD + auth guards, orders (checkout/empty-cart/isolation) and CORS -> 39 passed, 2 failed (missing brute-force lockout, CORS ACAO='*' with credentials). Frontend: full E2E via Playwright on the public URL -> homepage hero + 6 department cards each showing '50 ITEMS', 8 rock-bottom deals, guest add-to-cart sign-in toast, department navigation (24/page, 2/3 pagination), sort price_asc/price_desc/rating verified against rendered prices, navbar search (3 results for 'Vintage Radio'), product detail + related, register/logout/login (incl. wrong-password error), add to cart from grid and detail page with qty, cart qty +/-, remove, checkout -> 'ORDER LOCKED IN!' with order id + total, cart emptied, orders page lists the order with item thumbnails, guest cart prompt, empty-cart checkout guard, mobile 390px menu with 0px horizontal overflow, 0 broken images, no JS page errors. All core requirements (300 products, exactly 50/dept, low prices $0.99-$19.99, correct images) verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/login", "issue": "No brute-force protection/lockout: 6+ consecutive wrong-password attempts all return 401 with no 423/429 and no attempt counter. Playbook requires lockout after 5 failed attempts."},
+      {"endpoint": "OPTIONS/GET /api/* (CORS)", "issue": "Responses return Access-Control-Allow-Origin: '*' together with Access-Control-Allow-Credentials: true (CORS_ORIGINS='*' in .env). Browsers reject credentialed cross-origin requests with this combination. Not blocking today because the frontend is served from the same origin, but set explicit origins (FRONTEND_URL) instead of '*' since cookies are used."},
+      {"endpoint": "POST /api/orders", "issue": "Order does not decrement product 'stock' and does not validate availability, so stock is decorative (accepted MVP behaviour, flagging for awareness)."},
+      {"endpoint": "PUT /api/cart", "issue": "Update removes then appends the item, so a quantity change moves that line to the bottom of the cart list (visible reordering in the UI). Prefer in-place update to preserve order."},
+      {"endpoint": "startup seeding", "issue": "Products are seeded only when the collection is completely empty (count == 0). A partial/corrupt catalog (e.g. 120 docs) would never be repaired; consider seeding when count != 300."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Product card / product detail", "issues": ["Discount badges are unrealistic for a thrift marketplace (e.g. $4.99 vs original $38.51 = -87%) because seed original_price is a random 3.5x-9x multiplier. Tighten the multiplier (e.g. 1.5x-3x) for believable pricing."]},
+      {"screen": "Mobile menu (390px)", "issues": ["Menu has Departments/Orders/Sign Out but no 'My Cart' link; cart is only reachable via the small header icon."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Add login brute-force protection (lock/429 after 5 failed attempts per email/IP) as required by the auth playbook",
+    "Replace CORS_ORIGINS='*' with the explicit FRONTEND_URL origin since httpOnly cookies with credentials are used",
+    "Make PUT /api/cart update quantity in place so cart line order is stable",
+    "Optionally lower seed original_price multiplier so discount badges look realistic, and decrement stock on order"
+  ],
+  "critical_code_review_comments": [
+    "server.py: login has no rate limiting/lockout — only defence-in-depth gap found in auth.",
+    "server.py startup seeding is idempotent only for an empty collection; use a count/version check to self-heal a partial catalog.",
+    "server.py route order is correct (/products/deals declared before /products/{product_id}); _id is excluded everywhere (verified no '_id' leaks in products, orders, cart, user payloads).",
+    "server.py: all Mongo access is async via motor; Pydantic validation present on every write endpoint (422 verified for short password, bad email, qty 0, blank shipping).",
+    "Frontend uses process.env.REACT_APP_BACKEND_URL only; data-testid coverage is good (dept-card-*, product-card-*, add-to-cart-*, cart-plus/minus/remove-*, order-*, checkout-*, sort-*)."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "95% (39/41)", "frontend": "100% of tested flows"},
+  "seed_data_creation": "Created several TEST_*@example.com users via /api/auth/register (with carts/orders) for cart+checkout tests; pytest teardown deletes users matching ^TEST_ plus their carts/orders. One UI-created user (TEST_ui_*) and one admin order remain in the DB.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@lcfury.com / admin123 (works, role=admin). /app/memory/test_credentials.md also lists shopper@test.com/test123 which does NOT exist in the DB (must be created via signup) — consider seeding it or updating the file.",
+  "context_for_next_testing_agent": "Backend regression suite is at /app/backend/tests/backend_test.py (pytest, runs against public URL, 41 tests, ~11s). Two known-failing tests are intentional gap detectors: TestAuth::test_brute_force_lockout (no lockout implemented) and TestCORS::test_cors_credentials (ACAO '*' + credentials). All catalog, auth, cart, order and E2E purchase flows verified working; focus next run on any new features plus the 4 action items.",
+  "rca_of_the_issue": "test_brute_force_lockout fails because server.py /auth/login only compares the bcrypt hash and raises 401 — there is no failed-attempt counter or lock field on the user document. test_cors_credentials fails because CORS_ORIGINS is '*' in backend/.env, so allow_origins=['*'] and the edge returns literal '*' alongside Allow-Credentials: true; fix by setting CORS_ORIGINS to the FRONTEND_URL origin."
+}
