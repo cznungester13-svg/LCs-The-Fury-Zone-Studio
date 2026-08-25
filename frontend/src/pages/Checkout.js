@@ -1,45 +1,29 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
 import api, { formatApiErrorDetail } from "../lib/api";
 import { useCart } from "../context/CartContext";
 
 export default function Checkout() {
-  const { cart, refresh } = useCart();
-  const navigate = useNavigate();
+  const { cart } = useCart();
   const [form, setForm] = useState({ full_name: "", address: "", city: "" });
-  const [placing, setPlacing] = useState(false);
-  const [done, setDone] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    setPlacing(true);
+    setLoading(true);
     try {
-      const { data } = await api.post("/orders", form);
-      await refresh();
-      setDone(data);
-      toast.success("Order confirmed!");
+      const { data } = await api.post("/payments/checkout", {
+        origin_url: window.location.origin,
+        shipping: form,
+      });
+      window.location.href = data.checkout_url;
     } catch (err) {
       toast.error(formatApiErrorDetail(err.response?.data?.detail));
-    } finally {
-      setPlacing(false);
+      setLoading(false);
     }
   };
-
-  if (done) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-24 text-center" data-testid="order-success">
-        <CheckCircle2 size={64} strokeWidth={2} className="mx-auto mb-4 text-electric" />
-        <h1 className="font-display text-5xl uppercase">Order Locked In!</h1>
-        <p className="mt-3 font-mono text-sm text-ash">Order #{done.id.slice(0, 8).toUpperCase()} · ${done.total.toFixed(2)}</p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link to="/orders" className="brutal-btn brutal-btn-primary" data-testid="view-orders-btn">View Orders</Link>
-          <Link to="/shop" className="brutal-btn" data-testid="keep-shopping-btn">Keep Digging</Link>
-        </div>
-      </div>
-    );
-  }
 
   if (cart.items.length === 0) {
     return (
@@ -72,9 +56,12 @@ export default function Checkout() {
             <label className="mb-1 block font-mono text-xs font-bold uppercase">City</label>
             <input required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="brutal-input" data-testid="checkout-city" />
           </div>
-          <button type="submit" disabled={placing} className="brutal-btn brutal-btn-primary w-full py-4 text-lg disabled:opacity-50" data-testid="place-order-btn">
-            {placing ? "Placing..." : `Place Order · $${cart.total.toFixed(2)}`}
+          <button type="submit" disabled={loading} className="brutal-btn brutal-btn-primary w-full py-4 text-lg disabled:opacity-50" data-testid="place-order-btn">
+            <CreditCard size={20} strokeWidth={2.5} /> {loading ? "Redirecting to Stripe..." : `Pay $${cart.total.toFixed(2)}`}
           </button>
+          <p className="flex items-center justify-center gap-2 font-mono text-xs text-ash">
+            <ShieldCheck size={14} strokeWidth={2.5} /> Secured by Stripe · Test card 4242 4242 4242 4242
+          </p>
         </form>
 
         <div className="h-fit border-2 border-ink bg-highlighter p-6" style={{ boxShadow: "6px 6px 0 #0A0A0A" }}>
