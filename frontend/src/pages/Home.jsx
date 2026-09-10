@@ -10,9 +10,9 @@ const HERO = "https://images.pexels.com/photos/29548609/pexels-photo-29548609.jp
 const SELL_IMG = "https://images.pexels.com/photos/11317811/pexels-photo-11317811.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
 
 export default function Home() {
+  const [departments, setDepartments] = useState([]);
   const [featured, setFeatured] = useState(null);
   const [listings, setListings] = useState(null);
-  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     api.get("/products?featured=true&limit=4").then(({ data }) => setFeatured(data)).catch(() => setFeatured([]));
@@ -48,7 +48,7 @@ export default function Home() {
         </div>
       </section>
 
-{/* Department Grid Navigation Tiles */}
+      {/* Department Grid Navigation Tiles */}
       {departments.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
           <div className="border-b-2 border-black pb-3 mb-8">
