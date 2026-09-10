@@ -15,8 +15,13 @@ export default function Home() {
   const [listings, setListings] = useState(null);
 
   useEffect(() => {
-    api.get("/products?featured=true&limit=4").then(({ data }) => setFeatured(data)).catch(() => setFeatured([]));
-    api.get("/listings?limit=4").then(({ data }) => setListings(data)).catch(() => setListings([]));
+    api.get("/products?featured=true&limit=4")
+      .then(({ data }) => setFeatured(Array.isArray(data) ? data : data?.products || []))
+      .catch(() => setFeatured([]));
+
+    api.get("/listings?limit=4")
+      .then(({ data }) => setListings(Array.isArray(data) ? data : data?.listings || []))
+      .catch(() => setListings([]));
   }, []);
 
   return (
@@ -49,7 +54,7 @@ export default function Home() {
       </section>
 
       {/* Department Grid Navigation Tiles */}
-      {departments.length > 0 && (
+      {Array.isArray(departments) && departments.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
           <div className="border-b-2 border-black pb-3 mb-8">
             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">Shop by Department</h2>
@@ -88,7 +93,7 @@ export default function Home() {
       <Section title="Featured Store Drops" link="/store" linkLabel="All products">
         {featured === null ? <Spinner /> : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+            {Array.isArray(featured) && featured.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </Section>
@@ -109,7 +114,7 @@ export default function Home() {
       <Section title="Fresh Resale Finds" link="/marketplace" linkLabel="All resale">
         {listings === null ? <Spinner /> : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {listings.map((l) => <ListingCard key={l.id} listing={l} />)}
+            {Array.isArray(listings) && listings.map((l) => <ListingCard key={l.id} listing={l} />)}
           </div>
         )}
       </Section>
