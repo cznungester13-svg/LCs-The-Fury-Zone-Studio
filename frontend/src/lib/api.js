@@ -8,7 +8,7 @@ const BACKEND_URL =
 
 export const API = `${BACKEND_URL}/api`;
 
-const api = axios.create({ baseURL: API });
+export const api = axios.create({ baseURL: API });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("fury_token");
@@ -17,6 +17,14 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export function currency(value) {
+  const numeric = Number(value ?? 0);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number.isFinite(numeric) ? numeric : 0);
+}
 
 export function imgUrl(u) {
   if (!u) return "";

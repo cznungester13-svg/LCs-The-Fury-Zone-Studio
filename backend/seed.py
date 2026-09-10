@@ -12,6 +12,155 @@ IMG = {
     "camera": "https://images.pexels.com/photos/821653/pexels-photo-821653.jpeg",
 }
 
+IMAGE_THEME_MAP = {
+    "ring": [
+        "https://images.unsplash.com/photo-1601821765780-754fa98637c4?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=80",
+    ],
+    "necklace": [
+        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=900&q=80",
+    ],
+    "earring": [
+        "https://images.unsplash.com/photo-1535632787350-4e3c0ac1b8a7?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=900&q=80",
+    ],
+    "bracelet": [
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=900&q=80",
+    ],
+    "handbag": [
+        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80",
+    ],
+    "purse": [
+        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+    ],
+    "sunglasses": [
+        "https://images.unsplash.com/photo-1577803947579-9f0f2b7d8d22?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=900&q=80",
+    ],
+    "wallet": [
+        "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+    ],
+    "yarn": [
+        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+    ],
+    "crochet": [
+        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "craft": [
+        "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1493106641515-6b5631de4bb9?auto=format&fit=crop&w=900&q=80",
+    ],
+    "candle": [
+        "https://images.unsplash.com/photo-1602872029707-0f6f6f2ba0c9?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1528747045269-390fe33c19f2?auto=format&fit=crop&w=900&q=80",
+    ],
+    "shoes": [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=900&q=80",
+    ],
+    "sneaker": [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&q=80",
+    ],
+    "hoodie": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
+    ],
+    "tee": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    ],
+    "camera": [
+        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80",
+    ],
+    "bath": [
+        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=900&q=80",
+    ],
+    "decor": [
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
+    ],
+    "kitchen": [
+        "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80",
+    ],
+    "beauty": [
+        "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80",
+    ],
+    "pet": [
+        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1537151672256-6caf2e9f8c95?auto=format&fit=crop&w=900&q=80",
+    ],
+    "garden": [
+        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "tool": [
+        "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80",
+    ],
+}
+
+
+def _normalize_text(value):
+    return " ".join(str(value or "").lower().replace("-", " ").replace("/", " ").split())
+
+
+def resolve_product_department(title, description, fallback_department, category=None):
+    haystack = _normalize_text(f"{title} {description} {fallback_department} {category or ''}")
+
+    if any(keyword in haystack for keyword in ["sunglasses", "eyewear", "glasses", "handbag", "tote", "purse", "wallet", "crossbody", "shoulder bag"]):
+        return "Handbags & Accessories"
+    if any(keyword in haystack for keyword in ["ring", "necklace", "bracelet", "earring", "pendant", "charm", "jewelry", "zirconia", "silver", "gold"]):
+        return "Jewelry"
+    if any(keyword in haystack for keyword in ["yarn", "crochet", "fiber", "embroidery", "paint", "pottery", "craft", "macram", "candle", "altar", "loom", "thread"]):
+        return "Arts, Crafts & Hobbies"
+    if any(keyword in haystack for keyword in ["sneaker", "shoe", "boot", "heel", "trainer"]):
+        return "Footwear"
+    if any(keyword in haystack for keyword in ["hoodie", "tee", "mask", "costume", "dress", "shirt", "outfit"]):
+        return "Apparel"
+    if any(keyword in haystack for keyword in ["camera", "speaker", "light", "projector", "charger", "tracker", "battery", "smart"]):
+        return "Electronics"
+    if any(keyword in haystack for keyword in ["shower", "bath", "curtain", "mat", "towel", "toothbrush", "sheet"]):
+        return "Bed & Bath"
+    if any(keyword in haystack for keyword in ["decor", "vase", "lamp", "shelf", "chair", "table", "accent", "furniture"]):
+        return "Modern Furniture & Decor"
+    if any(keyword in haystack for keyword in ["kettle", "blender", "scale", "cookware", "pan", "bakeware", "knife", "food"]):
+        return "Kitchen & Small Appliances"
+    if any(keyword in haystack for keyword in ["serum", "nail", "makeup", "lip balm", "skincare", "beauty", "brush", "roller"]):
+        return "Health & Beauty"
+    if any(keyword in haystack for keyword in ["pet", "dog", "cat", "leash", "chew", "groom", "cushion", "feeding bowl"]):
+        return "Pets & Pet Supplies"
+    if any(keyword in haystack for keyword in ["garden", "soil", "trowel", "pathway", "led", "sword", "dagger", "blade", "knife" ]):
+        return "Home, Garden & Tools"
+    return fallback_department
+
+
+def get_product_images(title, description, department, category=None):
+    haystack = _normalize_text(f"{title} {description} {department} {category or ''}")
+    ordered_keywords = [
+        "ring", "necklace", "earring", "bracelet", "sunglasses", "handbag", "purse", "wallet",
+        "yarn", "crochet", "craft", "candle", "sneaker", "shoe", "hoodie", "tee", "camera",
+        "bath", "decor", "kitchen", "beauty", "pet", "garden", "tool"
+    ]
+    for keyword in ordered_keywords:
+        if keyword in haystack:
+            return IMAGE_THEME_MAP.get(keyword, [IMG["hero"]])
+    for keyword, urls in IMAGE_THEME_MAP.items():
+        if keyword in haystack:
+            return urls
+    return [IMG["hero"]]
+
 
 async def seed_admin():
     email = os.environ.get("ADMIN_EMAIL", "admin@furyzone.com")
@@ -39,9 +188,20 @@ async def _seed_user(email, name, roles):
         await ensure_seller_profile(uid, f"{name}'s Store")
     return uid
 
-async def seed_catalog():
-    if await db.products.count_documents({}) > 0:
+async def reset_catalog_collections():
+    for collection_name in [
+        "products", "departments", "categories", "brands", "inventory",
+        "resale_listings", "coupons"
+    ]:
+        collection = getattr(db, collection_name)
+        await collection.delete_many({})
+
+
+async def seed_catalog(force=False):
+    if not force and await db.products.count_documents({}) > 0:
         return
+    if force:
+        await reset_catalog_collections()
     dept_ids = {}
     
     all_departments = [
@@ -194,11 +354,29 @@ async def seed_catalog():
 
     # Database insertions execution
     for title, desc, price, dept, cat, brand, imgs, tags, feat, stock in products:
+        resolved_dept = resolve_product_department(title, desc, dept, cat)
+        resolved_cat = cat
+        if resolved_dept == "Handbags & Accessories" and "sunglasses" in _normalize_text(title + " " + desc):
+            resolved_cat = "Sunglasses"
+        elif resolved_dept == "Handbags & Accessories" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["tote", "purse", "crossbody", "wallet", "handbag"]):
+            resolved_cat = "Bags"
+        elif resolved_dept == "Jewelry" and "ring" in _normalize_text(title + " " + desc):
+            resolved_cat = "Accessories"
+        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["yarn", "crochet", "loom", "embroidery", "thread"]):
+            resolved_cat = "Crochet & Yarn"
+        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["candle", "altar", "ritual", "spell"]):
+            resolved_cat = "Metaphysical & Wicca"
+        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["party", "streamer", "gag", "novelty"]):
+            resolved_cat = "Party Supplies & Novelties"
+
+        resolved_dept_id = dept_ids[resolved_dept]
+        resolved_cat_id = cats.get(resolved_cat, cats.get(cat))
+        product_images = get_product_images(title, desc, resolved_dept, resolved_cat) or imgs
         pid = str(uuid.uuid4())
         await db.products.insert_one({
             "id": pid, "title": title, "description": desc, "price": price,
-            "department_id": dept_ids[dept], "category_id": cats[cat], "brand_id": brands[brand],
-            "images": imgs, "tags": tags,
+            "department_id": resolved_dept_id, "category_id": resolved_cat_id, "brand_id": brands[brand],
+            "images": product_images, "tags": tags,
             "variants": [
                 {"id": str(uuid.uuid4()), "name": "Standard", "price": price, "stock": stock, "sku": None},
             ],
@@ -241,7 +419,7 @@ async def create_indexes():
     await db.payment_transactions.create_index("session_id")
 
 
-async def run_seed():
+async def run_seed(force=False):
     await create_indexes()
     await seed_admin()
-    await seed_catalog()
+    await seed_catalog(force=force)

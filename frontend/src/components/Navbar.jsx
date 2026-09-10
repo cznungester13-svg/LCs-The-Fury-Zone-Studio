@@ -51,7 +51,7 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16 gap-4">
             <Link to="/" className="shrink-0" data-testid="logo-link">
               <span className="font-head font-black text-xl sm:text-2xl tracking-tighter uppercase leading-none">
-                LCs<span className=\"text-[#FF3B30]\"> Fury</span>Zone
+                LCs<span className="text-[#FF3B30]"> Fury</span>Zone
               </span>
             </Link>
 
@@ -94,7 +94,7 @@ export function Navbar() {
                     <User size={18} />
                   </button>
                   {userMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border-2 border-black brutal-shadow z-50\" onMouseLeave={() => setUserMenu(false)}>
+                    <div className="absolute right-0 mt-2 w-56 bg-white border-2 border-black brutal-shadow z-50" onMouseLeave={() => setUserMenu(false)}>
                       <div className="px-4 py-3 border-b-2 border-black">
                         <p className="font-bold truncate">{user.full_name}</p>
                         <p className="text-xs text-zinc-500 truncate">{user.email}</p>

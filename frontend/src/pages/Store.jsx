@@ -48,20 +48,45 @@ export default function Store() {
       <div className="grid lg:grid-cols-[240px_1fr] gap-8">
         <aside className="space-y-6">
           <div className="flex items-center gap-2 font-black uppercase"><SlidersHorizontal size={18} /> Filters</div>
+
           <FilterGroup title="Department">
-            <SelectFilter value={dept} onChange={setDept} options={[["", "All"], ...departments.map((d) => [d.id, d.name])]} testid="filter-department" />
+            <SelectFilter
+              value={dept}
+              onChange={setDept}
+              options={departments.length > 0 ? [["", "All"], ...departments.map((d) => [d.id, d.name])] : [["", "Loading..."]]}
+              testid="filter-department"
+            />
           </FilterGroup>
-         
-<SelectFilter 
-  value={dept} 
-  onChange={setDept} 
-  options={departments.length > 0 ? [["", "All"], ...departments.map((d) => [d.id, d.name])] : [["", "Loading..."]]} 
-  testid="filter-department" 
-/>
+
+          <FilterGroup title="Brand">
+            <SelectFilter
+              value={brand}
+              onChange={setBrand}
+              options={brands.length > 0 ? [["", "All"], ...brands.map((b) => [b.id, b.name])] : [["", "Loading..."]]}
+              testid="filter-brand"
+            />
+          </FilterGroup>
+
+          <FilterGroup title="Max Price">
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Any price"
+              className="w-full border-2 border-zinc-200 px-3 py-2 text-sm outline-none focus:border-black"
+              data-testid="filter-max-price"
+            />
+          </FilterGroup>
+
+          <Btn onClick={clearFilters} variant="outline" className="w-full">
+            Clear filters
+          </Btn>
+        </aside>
+
         <div>
           <div className="flex justify-between items-center mb-6">
             <p className="font-mono text-sm text-zinc-500 uppercase">{products ? `${products.length} items` : ""}</p>
-            <SelectFilter value={sort} onChange={setSort} options={[["newest", "Newest"], ["price_asc", "Price ↑"], ["price_desc", "Price ↓"]]} testid="sort-select" small />
+            <SelectFilter value={sort} onChange={setSort} options={[['newest', 'Newest'], ['price_asc', 'Price ↑'], ['price_desc', 'Price ↓']]} testid="sort-select" small />
           </div>
           {products === null ? <Spinner /> : products.length === 0 ? (
             <EmptyState title="No products found" subtitle="Try adjusting your filters." action={<Btn onClick={clearFilters}>Clear filters</Btn>} />
