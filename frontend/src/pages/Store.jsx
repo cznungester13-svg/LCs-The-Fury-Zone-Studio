@@ -74,7 +74,7 @@ export default function Store() {
           ) : Array.isArray(products) && products.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
               {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id || p._id} product={p} />
               ))}
             </div>
           ) : (
@@ -84,6 +84,30 @@ export default function Store() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Named export required by external imports
+export function SelectFilter({ label, value, onChange, options = [] }) {
+  return (
+    <div>
+      {label && (
+        <label className="block text-xs font-mono uppercase tracking-widest text-zinc-500 mb-1">
+          {label}
+        </label>
+      )}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full p-2 border-2 border-black bg-white font-mono text-sm focus:outline-none cursor-pointer"
+      >
+        {Array.isArray(options) && options.map((opt) => (
+          <option key={opt.value || opt.id} value={opt.value || opt.slug}>
+            {opt.label || opt.name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
