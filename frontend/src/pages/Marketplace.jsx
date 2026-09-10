@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 // Fix: Convert path aliases to relative references to clear compilation crashes
 import api from "../lib/api";
-import { ListingCard } from "../components/cards";
+import { ListingCard } from "../components/Cards";
 import { Spinner, EmptyState, Btn } from "../components/common";
 import { SelectFilter } from "./Store";
 import { SlidersHorizontal } from "lucide-react";

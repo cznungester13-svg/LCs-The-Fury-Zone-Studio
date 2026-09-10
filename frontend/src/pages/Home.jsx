@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Zap, Tag, ShieldCheck } from "lucide-react";
 // Fix: Correct path alias mapping by shifting to relative directory structures
 import api from "../lib/api";
-import { ProductCard, ListingCard } from "../components/cards";
+import { ProductCard, ListingCard } from "../components/Cards";
 import { Btn, Spinner } from "../components/common";
 
 const HERO = "https://images.pexels.com/photos/29548609/pexels-photo-29548609.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
@@ -12,6 +12,7 @@ const SELL_IMG = "https://images.pexels.com/photos/11317811/pexels-photo-1131781
 export default function Home() {
   const [featured, setFeatured] = useState(null);
   const [listings, setListings] = useState(null);
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     api.get("/products?featured=true&limit=4").then(({ data }) => setFeatured(data)).catch(() => setFeatured([]));

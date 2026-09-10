@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 // Fix: Use traditional relative paths to ensure your build compiles correctly
 import api from "../lib/api";
-import { ProductCard } from "../components/cards";
+import { ProductCard } from "../components/Cards";
 import { Spinner, EmptyState, Btn } from "../components/common";
 import { SlidersHorizontal } from "lucide-react";
 
