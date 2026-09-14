@@ -1,5 +1,25 @@
 import React from "react";
 
+// Named export required by other components
+export function SelectFilter({ options = [], value, onChange, placeholder = "Select filter..." }) {
+  const safeOptions = Array.isArray(options) ? options : [];
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      className="border-2 border-black px-3 py-2 text-sm font-bold uppercase outline-none bg-white"
+    >
+      <option value="">{placeholder}</option>
+      {safeOptions.map((opt) => (
+        <option key={opt.id || opt.value || opt} value={opt.value || opt}>
+          {opt.label || opt.name || opt}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// Default export component with full array protection
 export default function Store({ departments = [], products = [], options = [] }) {
   const safeDepartments = Array.isArray(departments) ? departments : [];
   const safeProducts = Array.isArray(products) ? products : [];
