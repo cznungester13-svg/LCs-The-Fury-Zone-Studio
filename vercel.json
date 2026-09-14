@@ -6,14 +6,14 @@
       "config": { "distDir": "build" }
     },
     {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
+      "src": "backend/server.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/server.js"
+      "dest": "backend/server.py"
     },
     {
       "src": "/(.*)",
