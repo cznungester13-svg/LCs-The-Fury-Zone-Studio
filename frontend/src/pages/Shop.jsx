@@ -1,48 +1,77 @@
 import React from "react";
 
-const CATS = ["All", "Apparel", "Collectibles", "Accessories", "Digital"];
+// Named export required by other components
+export function SelectFilter({ options = [], value, onChange, placeholder = "Select filter..." }) {
+  const safeOptions = Array.isArray(options) ? options : [];
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      className="border-2 border-black px-3 py-2 text-sm font-bold uppercase outline-none bg-white"
+    >
+      <option value="">{placeholder}</option>
+      {safeOptions.map((opt) => (
+        <option key={opt.id || opt.value || opt} value={opt.value || opt}>
+          {opt.label || opt.name || opt}
+        </option>
+      ))}
+    </select>
+  );
+}
 
-export default function Shop({ products = [] }) {
+// Default export component with full array protection
+export default function Store({ departments = [], products = [], options = [] }) {
+  const safeDepartments = Array.isArray(departments) ? departments : [];
   const safeProducts = Array.isArray(products) ? products : [];
+  const safeOptions = Array.isArray(options) ? options : [];
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Category Pills */}
-      <div className="flex space-x-2 mb-8">
-        {CATS.map((c) => (
+      {/* Departments Navigation */}
+      <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
+        {safeDepartments.map((d) => (
           <button
-            key={c}
-            className="px-4 py-2 text-sm font-bold uppercase border-2 border-black hover:bg-black hover:text-white transition"
+            key={d.id || d}
+            className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-full font-semibold text-sm"
           >
-            {c}
+            {d.name || d}
           </button>
         ))}
       </div>
 
+      {/* Filter Options */}
+      {safeOptions.length > 0 && (
+        <div className="flex gap-2 mb-6">
+          {safeOptions.map((opt) => (
+            <span key={opt.id || opt} className="text-xs bg-zinc-200 px-2 py-1 rounded">
+              {opt.label || opt}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {safeProducts.length > 0 ? (
-          safeProducts.map((p, i) => (
-            <div key={p.id || p._id || i} className="border-2 border-black p-4 relative">
-              <div className="h-48 bg-zinc-100 flex items-center justify-center mb-4">
-                {p.image ? (
-                  <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-zinc-400 text-xs font-mono">NO IMAGE</span>
-                )}
-              </div>
-              <h2 className="font-black uppercase text-base truncate">{p.name || "Item"}</h2>
-              <p className="font-mono text-sm text-zinc-700 font-bold mt-1">
+          safeProducts.map((p) => (
+            <div key={p.id || p._id} className="border rounded-lg p-4 shadow-sm hover:shadow-md transition">
+              {p.image && (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="w-full h-48 object-cover rounded-md mb-4"
+                />
+              )}
+              <h3 className="font-bold text-lg mb-1">{p.name || "Product"}</h3>
+              <p className="text-zinc-600 font-semibold mb-2">
                 ${typeof p.price === "number" ? p.price.toFixed(2) : p.price || "0.00"}
               </p>
             </div>
           ))
         ) : (
-          Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="border-2 border-dashed border-zinc-200 p-4 h-64 flex items-center justify-center text-zinc-400 text-xs font-mono">
-              LOADING / NO DATA
-            </div>
-          ))
+          <div className="col-span-full text-center py-12 text-zinc-500">
+            No products found or endpoint failed to return an array.
+          </div>
         )}
       </div>
     </div>
