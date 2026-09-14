@@ -8,7 +8,7 @@ from database import db, now_iso, NO_ID
 from auth import get_current_user, require_roles, ensure_seller_profile
 from notify import create_notification
 
-router = APIRouter(prefix="/api", tags=["resale"])
+router = APIRouter(prefix="", tags=["resale"])
 
 CONDITIONS = ["new", "like_new", "good", "fair"]
 

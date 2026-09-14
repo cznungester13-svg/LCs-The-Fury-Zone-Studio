@@ -3,7 +3,7 @@ from database import db
 from auth import get_current_admin, get_current_user
 from bson import ObjectId
 
-router = APIRouter(prefix="/api/chat", tags=["chat"])
+router = APIRouter(prefix="/chat", tags=["chat"])
 
 @router.get("/messages")
 async def get_messages():

@@ -11,7 +11,7 @@ from pydantic import BaseModel, EmailStr
 from database import db, now_iso, NO_ID
 
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

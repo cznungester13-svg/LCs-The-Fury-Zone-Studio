@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from database import db, now_iso, NO_ID
 from auth import get_current_user
 
-router = APIRouter(prefix="/api", tags=["engage"])
+router = APIRouter(prefix="", tags=["engage"])
 
 
 @router.get("/notifications")

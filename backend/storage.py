@@ -29,7 +29,7 @@ MIME_TYPES = {
 }
 
 
-router = APIRouter(prefix="/api", tags=["files"])
+router = APIRouter(prefix="", tags=["files"])
 
 
 async def init_storage_async(client: httpx.AsyncClient):

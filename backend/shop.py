@@ -12,7 +12,7 @@ from auth import get_current_user
 from notify import create_notification, log_event
 from emailer import send_email, order_confirmation_html
 
-router = APIRouter(prefix="/api", tags=["shop"])
+router = APIRouter(prefix="", tags=["shop"])
 COMMISSION = float(os.environ.get("PLATFORM_COMMISSION_RATE", "0.10"))
 
 # ---------------- Cart & Utils (Kept the same) ----------------

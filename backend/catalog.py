@@ -7,7 +7,7 @@ from typing import List, Optional
 from database import db, now_iso, NO_ID
 from auth import get_current_user, require_roles
 
-router = APIRouter(prefix="/api", tags=["catalog"])
+router = APIRouter(prefix="", tags=["catalog"])
 
 
 # ---------- Taxonomy ----------
