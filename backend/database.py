@@ -1,6 +1,10 @@
 import os
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent / ".env")
 
 mongo_url = os.environ.get("MONGO_URL", "")
 

@@ -1,3 +1,11 @@
+from fastapi import APIRouter, Depends
+
+from auth import require_roles
+from database import db, now_iso
+
+router = APIRouter(prefix="/admin", tags=["admin"])
+
+
 @router.get("/metrics")
 async def metrics(admin=Depends(require_roles("admin"))):
     # Optimize Revenue via Native Database Aggregation

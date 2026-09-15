@@ -14,7 +14,7 @@ IMG = {
 
 IMAGE_THEME_MAP = {
     "ring": [
-        "https://images.unsplash.com/photo-1601821765780-754fa98637c4?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1601821765780-754fa98637c4?auto=format&fit=crop&w=900&q=80&keyword=ring",
         "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=80",
     ],
     "necklace": [
@@ -109,6 +109,46 @@ IMAGE_THEME_MAP = {
         "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
         "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80",
     ],
+    "automotive": [
+        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80",
+    ],
+    "wicca": [
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=900&q=80",
+    ],
+    "party": [
+        "https://images.unsplash.com/photo-1530103862676-de8c9de?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=900&q=80",
+    ],
+}
+
+CANONICAL_DEPARTMENTS = [
+    "Home Furnishings",
+    "Apparel & Clothing",
+    "Shoes, Handbags & Accessories",
+    "Bed & Bath",
+    "Kitchen & Kitchen Supplies",
+    "Home & Garden",
+    "Tools, Gadgets & Home Improvement",
+    "Hobbies, Arts & Crafts",
+    "Electronics",
+    "Jewelry",
+    "Gag Gifts & Party Supplies",
+    "Wicca & Wicca Supplies",
+    "Automotive",
+]
+
+DEPARTMENT_ALIASES = {
+    "Modern Furniture & Decor": "Home Furnishings",
+    "Apparel": "Apparel & Clothing",
+    "Footwear": "Shoes, Handbags & Accessories",
+    "Handbags & Accessories": "Shoes, Handbags & Accessories",
+    "Kitchen & Small Appliances": "Kitchen & Kitchen Supplies",
+    "Home, Garden & Tools": "Home & Garden",
+    "Arts, Crafts & Hobbies": "Hobbies, Arts & Crafts",
+    "Health & Beauty": "Apparel & Clothing",
+    "Pets & Pet Supplies": "Home & Garden",
 }
 
 
@@ -119,31 +159,37 @@ def _normalize_text(value):
 def resolve_product_department(title, description, fallback_department, category=None):
     haystack = _normalize_text(f"{title} {description} {fallback_department} {category or ''}")
 
+    if any(keyword in haystack for keyword in ["wicca", "altar", "ritual", "spell", "crystal", "tarot"]):
+        return "Wicca & Wicca Supplies"
+    if any(keyword in haystack for keyword in ["gag", "party", "novelty", "streamer", "balloon"]):
+        return "Gag Gifts & Party Supplies"
+    if any(keyword in haystack for keyword in ["automotive", "car", "vehicle", "motorcycle", "dashboard"]):
+        return "Automotive"
     if any(keyword in haystack for keyword in ["sunglasses", "eyewear", "glasses", "handbag", "tote", "purse", "wallet", "crossbody", "shoulder bag"]):
-        return "Handbags & Accessories"
+        return "Shoes, Handbags & Accessories"
     if any(keyword in haystack for keyword in ["ring", "necklace", "bracelet", "earring", "pendant", "charm", "jewelry", "zirconia", "silver", "gold"]):
         return "Jewelry"
     if any(keyword in haystack for keyword in ["yarn", "crochet", "fiber", "embroidery", "paint", "pottery", "craft", "macram", "candle", "altar", "loom", "thread"]):
-        return "Arts, Crafts & Hobbies"
+        return "Hobbies, Arts & Crafts"
     if any(keyword in haystack for keyword in ["sneaker", "shoe", "boot", "heel", "trainer"]):
-        return "Footwear"
+        return "Shoes, Handbags & Accessories"
     if any(keyword in haystack for keyword in ["hoodie", "tee", "mask", "costume", "dress", "shirt", "outfit"]):
-        return "Apparel"
+        return "Apparel & Clothing"
     if any(keyword in haystack for keyword in ["camera", "speaker", "light", "projector", "charger", "tracker", "battery", "smart"]):
         return "Electronics"
     if any(keyword in haystack for keyword in ["shower", "bath", "curtain", "mat", "towel", "toothbrush", "sheet"]):
         return "Bed & Bath"
     if any(keyword in haystack for keyword in ["decor", "vase", "lamp", "shelf", "chair", "table", "accent", "furniture"]):
-        return "Modern Furniture & Decor"
+        return "Home Furnishings"
     if any(keyword in haystack for keyword in ["kettle", "blender", "scale", "cookware", "pan", "bakeware", "knife", "food"]):
-        return "Kitchen & Small Appliances"
+        return "Kitchen & Kitchen Supplies"
     if any(keyword in haystack for keyword in ["serum", "nail", "makeup", "lip balm", "skincare", "beauty", "brush", "roller"]):
-        return "Health & Beauty"
+        return "Apparel & Clothing"
     if any(keyword in haystack for keyword in ["pet", "dog", "cat", "leash", "chew", "groom", "cushion", "feeding bowl"]):
-        return "Pets & Pet Supplies"
+        return "Home & Garden"
     if any(keyword in haystack for keyword in ["garden", "soil", "trowel", "pathway", "led", "sword", "dagger", "blade", "knife" ]):
-        return "Home, Garden & Tools"
-    return fallback_department
+        return "Home & Garden"
+    return DEPARTMENT_ALIASES.get(fallback_department, fallback_department)
 
 
 def get_product_images(title, description, department, category=None):
@@ -151,7 +197,7 @@ def get_product_images(title, description, department, category=None):
     ordered_keywords = [
         "ring", "necklace", "earring", "bracelet", "sunglasses", "handbag", "purse", "wallet",
         "yarn", "crochet", "craft", "candle", "sneaker", "shoe", "hoodie", "tee", "camera",
-        "bath", "decor", "kitchen", "beauty", "pet", "garden", "tool"
+        "bath", "decor", "kitchen", "beauty", "pet", "garden", "tool", "automotive", "wicca", "party"
     ]
     for keyword in ordered_keywords:
         if keyword in haystack:
@@ -199,21 +245,31 @@ async def reset_catalog_collections():
 
 async def seed_catalog(force=False):
     if not force and await db.products.count_documents({}) > 0:
-        return
+        departments = await db.departments.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+        department_ids = {department["name"]: department["id"] for department in departments}
+        catalog_complete = set(department_ids) == set(CANONICAL_DEPARTMENTS)
+        if catalog_complete:
+            for department_name in CANONICAL_DEPARTMENTS:
+                product_count = await db.products.count_documents({"department_id": department_ids[department_name], "images.0": {"$exists": True}})
+                if product_count < 50:
+                    catalog_complete = False
+                    break
+        if catalog_complete:
+            return
+        force = True
     if force:
         await reset_catalog_collections()
     dept_ids = {}
     
-    all_departments = [
-        "Footwear", "Apparel", "Electronics", "Bed & Bath", "Modern Furniture & Decor",
-        "Kitchen & Small Appliances", "Health & Beauty", "Pets & Pet Supplies", 
-        "Jewelry", "Arts, Crafts & Hobbies", "Home, Garden & Tools", "Handbags & Accessories"
-    ]
+    all_departments = CANONICAL_DEPARTMENTS
     for name in all_departments:
         did = str(uuid.uuid4())
         dept_ids[name] = did
         await db.departments.insert_one({"id": did, "name": name,
                                          "slug": name.replace(" ", "-").replace("&", "and").replace(",", "").lower(), "created_at": now_iso()})
+
+    for legacy_name, canonical_name in DEPARTMENT_ALIASES.items():
+        dept_ids[legacy_name] = dept_ids[canonical_name]
 
     brands = {}
     for name in ["FuryLab", "Streetline", "Voltage", "Northpeak", "CraftCore", "BeautyPure", "PetPride", "GlowStyle", "HomeFit", "FuryGadgets", "IronForge", "PartyZone"]:
@@ -236,6 +292,12 @@ async def seed_catalog(force=False):
         "Home, Garden & Tools": ["Garden Supplies", "Home Tools", "Blades & Collectibles"],
         "Handbags & Accessories": ["Bags", "Sunglasses"]
     }
+    cat_map.update({
+        "Automotive": ["Car Care", "Auto Accessories"],
+        "Gag Gifts & Party Supplies": ["Gag Gifts", "Party Supplies"],
+        "Wicca & Wicca Supplies": ["Candles & Rituals", "Crystals & Divination"],
+        "Tools, Gadgets & Home Improvement": ["Tools", "Home Improvement"],
+    })
     for dept, clist in cat_map.items():
         for c in clist:
             cid = str(uuid.uuid4())
@@ -351,23 +413,41 @@ async def seed_catalog(force=False):
         b_type = bag_types[idx % len(bag_types)]
         products.append((f"{styles[idx % 5]} {b_type} (#{idx})", f"Chic {b_type.lower()} adding a seamless and highly functional finish to daily streetwear.", random.choice(bag_prices), "Handbags & Accessories", "Bags" if "Bag" in b_type or "Purse" in b_type else "Sunglasses", "GlowStyle", bag_images, ["accessories", "bags"], False, random.randint(20, 85)))
 
+    # 13. WICCA, PARTY, AND AUTOMOTIVE DEPARTMENTS (50 distinct items each)
+    department_batches = [
+        ("Wicca & Wicca Supplies", "Crystals & Divination", "FuryLab", ["Wicca Crystal Altar Kit", "Moon Phase Tarot Deck", "Herbal Spell Jar Set", "Cleansing Sage Bundle", "Celestial Ritual Journal"], "wicca"),
+        ("Gag Gifts & Party Supplies", "Party Supplies", "PartyZone", ["Hilarious Gag Gift Box", "Birthday Balloon Garland Kit", "Funny Novelty Mug", "Confetti Celebration Pack", "Photo Booth Party Props"], "party"),
+        ("Automotive", "Auto Accessories", "FuryGadgets", ["Universal Car Phone Mount", "LED Interior Car Light Kit", "Microfiber Auto Detailing Set", "Emergency Roadside Tool Kit", "Waterproof Trunk Organizer"], "automotive"),
+        ("Hobbies, Arts & Crafts", "Crochet & Yarn", "CraftCore", ["Premium Crochet Yarn Bundle", "Ergonomic Crochet Hook Set", "Embroidery Starter Kit", "Watercolor Pocket Paint Set", "DIY Macrame Wall Hanging Kit"], "craft"),
+        ("Tools, Gadgets & Home Improvement", "Tools", "IronForge", ["Cordless Precision Screwdriver Set", "Magnetic Hardware Organizer", "Compact Laser Measure", "Heavy-Duty Utility Knife", "Smart Socket Tester"], "tool"),
+    ]
+    for department, category, brand, item_types, image_theme in department_batches:
+        for idx in range(1, 51):
+            item_type = item_types[idx % len(item_types)]
+            products.append((
+                f"{styles[idx % len(styles)]} {item_type} #{idx}",
+                f"A carefully selected {item_type.lower()} with practical details for the {department.lower()} collection.",
+                round(8.99 + (idx % 8) * 4.5, 2), department, category, brand,
+                IMAGE_THEME_MAP[image_theme], [image_theme, "collection"], False, random.randint(15, 90),
+            ))
+
 
     # Database insertions execution
     for title, desc, price, dept, cat, brand, imgs, tags, feat, stock in products:
         resolved_dept = resolve_product_department(title, desc, dept, cat)
         resolved_cat = cat
-        if resolved_dept == "Handbags & Accessories" and "sunglasses" in _normalize_text(title + " " + desc):
+        if resolved_dept == "Shoes, Handbags & Accessories" and "sunglasses" in _normalize_text(title + " " + desc):
             resolved_cat = "Sunglasses"
-        elif resolved_dept == "Handbags & Accessories" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["tote", "purse", "crossbody", "wallet", "handbag"]):
+        elif resolved_dept == "Shoes, Handbags & Accessories" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["tote", "purse", "crossbody", "wallet", "handbag"]):
             resolved_cat = "Bags"
         elif resolved_dept == "Jewelry" and "ring" in _normalize_text(title + " " + desc):
             resolved_cat = "Accessories"
-        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["yarn", "crochet", "loom", "embroidery", "thread"]):
+        elif resolved_dept == "Hobbies, Arts & Crafts" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["yarn", "crochet", "loom", "embroidery", "thread"]):
             resolved_cat = "Crochet & Yarn"
-        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["candle", "altar", "ritual", "spell"]):
+        elif resolved_dept == "Wicca & Wicca Supplies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["candle", "altar", "ritual", "spell", "wicca"]):
             resolved_cat = "Metaphysical & Wicca"
-        elif resolved_dept == "Arts, Crafts & Hobbies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["party", "streamer", "gag", "novelty"]):
-            resolved_cat = "Party Supplies & Novelties"
+        elif resolved_dept == "Gag Gifts & Party Supplies":
+            resolved_cat = "Party Supplies"
 
         resolved_dept_id = dept_ids[resolved_dept]
         resolved_cat_id = cats.get(resolved_cat, cats.get(cat))

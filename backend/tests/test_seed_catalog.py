@@ -24,18 +24,18 @@ def test_non_craft_items_are_not_assigned_to_crafts_department():
         "Lightweight polarized sunglasses for outdoor wear.",
         "Handbags & Accessories",
         "Sunglasses",
-    ) == "Handbags & Accessories"
+    ) == "Shoes, Handbags & Accessories"
 
     assert resolve_product_department(
         "Classic Designer-Style Tote Handbag",
         "Spacious vegan leather tote with a structured silhouette.",
         "Handbags & Accessories",
         "Bags",
-    ) == "Handbags & Accessories"
+    ) == "Shoes, Handbags & Accessories"
 
     assert resolve_product_department(
         "Premium Acrylic Crochet Yarn Pack",
         "A rich assortment of yarn colors for crochet projects and handmade décor.",
         "Arts, Crafts & Hobbies",
         "Crochet & Yarn",
-    ) == "Arts, Crafts & Hobbies"
+    ) == "Hobbies, Arts & Crafts"

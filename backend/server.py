@@ -19,6 +19,7 @@ from admin_routes import router as admin_router
 from storage import router as files_router
 from seed import run_seed
 from chat import router as chat_router
+from raffle import router as raffle_router
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ async def health():
 
 # Change your existing line 66 to this:
 for r in [auth_router, catalog_router, resale_router, shop_router,
-          engage_router, admin_router, files_router, chat_router]:
+          engage_router, admin_router, files_router, chat_router, raffle_router]:
     app.include_router(r)
 # Safe parsing configuration for cross-origin tracking vectors
 raw_cors = os.environ.get("CORS_ORIGINS", "*")

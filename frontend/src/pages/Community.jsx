@@ -7,6 +7,7 @@ export default function Community() {
   const { user, isAdmin } = useAuth();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [raffle, setRaffle] = useState(null);
 
   // Poll for messages every 3 seconds
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function Community() {
       api.get("/chat/messages").then(({ data }) => setMessages(data)).catch(() => {});
     };
     fetchMessages();
+    api.get("/raffle/current").then(({ data }) => setRaffle(data)).catch(() => {});
     const interval = setInterval(fetchMessages, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -32,7 +34,20 @@ export default function Community() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-black uppercase tracking-tighter mb-8">Chatting with my girls!</h1>
+      <h1 className="text-3xl font-black uppercase tracking-tighter mb-8">Chatting with the Peeps</h1>
+
+      {raffle && (
+        <div className="border-2 border-black p-5 mb-8">
+          <p className="text-xs font-bold uppercase tracking-widest">Weekly customer raffle</p>
+          <h2 className="text-xl font-black mt-1">{raffle.prize}</h2>
+          <p className="text-sm text-zinc-600 mt-1">{raffle.entry_count} peeps entered this week.</p>
+          {user && raffle.status === "open" && (
+            <Btn onClick={async () => { await api.post("/raffle/enter"); setRaffle({ ...raffle, entry_count: raffle.entry_count + 1 }); }} className="mt-4">
+              Enter this week
+            </Btn>
+          )}
+        </div>
+      )}
       
       {/* Message Feed */}
       <div className="space-y-4 mb-8">

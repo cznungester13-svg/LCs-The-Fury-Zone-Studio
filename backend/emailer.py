@@ -1,14 +1,17 @@
 import os
 import asyncio
 import logging
-import resend
+try:
+    import resend
+except ImportError:
+    resend = None
 
 logger = logging.getLogger(__name__)
 
 
 async def send_email(to: str, subject: str, html: str):
     api_key = os.environ.get("RESEND_API_KEY", "")
-    if not api_key:
+    if not api_key or resend is None:
         logger.info(f"[email skipped - no RESEND_API_KEY] to={to} subject={subject}")
         return {"status": "skipped"}
         
