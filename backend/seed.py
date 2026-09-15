@@ -159,6 +159,8 @@ def _normalize_text(value):
 def resolve_product_department(title, description, fallback_department, category=None):
     haystack = _normalize_text(f"{title} {description} {fallback_department} {category or ''}")
 
+    if fallback_department in CANONICAL_DEPARTMENTS:
+        return fallback_department
     if any(keyword in haystack for keyword in ["wicca", "altar", "ritual", "spell", "crystal", "tarot"]):
         return "Wicca & Wicca Supplies"
     if any(keyword in haystack for keyword in ["gag", "party", "novelty", "streamer", "balloon"]):
