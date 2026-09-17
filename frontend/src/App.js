@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Analytics } from "@vercel/analytics/react";
 
 import Home from "@/pages/Home";
 import Store from "@/pages/Store";
@@ -23,6 +24,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Community from "@/pages/Community";
+
 function App() {
   return (
     <AuthProvider>
@@ -75,6 +77,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <Analytics />
           </div>
         </BrowserRouter>
       </CartProvider>
