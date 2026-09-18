@@ -17,7 +17,7 @@ from shop import router as shop_router
 from engage import router as engage_router
 from admin_routes import router as admin_router
 from storage import router as files_router
-from seed import run_seed
+from seed import seed_database as run_seed
 from chat import router as chat_router
 from raffle import router as raffle_router
 logging.basicConfig(level=logging.INFO,
