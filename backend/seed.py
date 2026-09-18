@@ -1,507 +1,89 @@
 import os
-import uuid
 import random
-from database import db, now_iso
-from auth import hash_password, ensure_seller_profile
+from pymongo import MongoClient
 
-IMG = {
-    "hero": "https://images.pexels.com/photos/29548609/pexels-photo-29548609.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "hoodie": "https://images.pexels.com/photos/11317811/pexels-photo-11317811.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "sneaker_white": "https://images.pexels.com/photos/12628400/pexels-photo-12628400.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "sneaker_grey": "https://images.pexels.com/photos/1456733/pexels-photo-1456733.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "camera": "https://images.pexels.com/photos/821653/pexels-photo-821653.jpeg",
-}
+# Connect to your MongoDB database
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://cluster.mongodb.net/")
+client = MongoClient(MONGO_URI)
+db = client.get_database("fury_zone")
 
-IMAGE_THEME_MAP = {
-    "ring": [
-        "https://images.unsplash.com/photo-1601821765780-754fa98637c4?auto=format&fit=crop&w=900&q=80&keyword=ring",
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=80",
-    ],
-    "necklace": [
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=900&q=80",
-    ],
-    "earring": [
-        "https://images.unsplash.com/photo-1535632787350-4e3c0ac1b8a7?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=900&q=80",
-    ],
-    "bracelet": [
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=900&q=80",
-    ],
-    "handbag": [
-        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80",
-    ],
-    "purse": [
-        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
-    ],
-    "sunglasses": [
-        "https://images.unsplash.com/photo-1577803947579-9f0f2b7d8d22?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=900&q=80",
-    ],
-    "wallet": [
-        "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
-    ],
-    "yarn": [
-        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
-    ],
-    "crochet": [
-        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
-    ],
-    "craft": [
-        "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1493106641515-6b5631de4bb9?auto=format&fit=crop&w=900&q=80",
-    ],
-    "candle": [
-        "https://images.unsplash.com/photo-1602872029707-0f6f6f2ba0c9?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1528747045269-390fe33c19f2?auto=format&fit=crop&w=900&q=80",
-    ],
-    "shoes": [
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=900&q=80",
-    ],
-    "sneaker": [
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&q=80",
-    ],
-    "hoodie": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
-    ],
-    "tee": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
-    ],
-    "camera": [
-        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80",
-    ],
-    "bath": [
-        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=900&q=80",
-    ],
-    "decor": [
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
-    ],
-    "kitchen": [
-        "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80",
-    ],
-    "beauty": [
-        "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80",
-    ],
-    "pet": [
-        "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1537151672256-6caf2e9f8c95?auto=format&fit=crop&w=900&q=80",
-    ],
-    "garden": [
-        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80",
-    ],
-    "tool": [
-        "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80",
-    ],
-    "automotive": [
-        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80",
-    ],
-    "wicca": [
-        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=900&q=80",
-    ],
-    "party": [
-        "https://images.unsplash.com/photo-1530103862676-de8c9de?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=900&q=80",
-    ],
-}
+def seed_database():
+    print("🚀 Starting customized store and chat initialization...")
 
-CANONICAL_DEPARTMENTS = [
-    "Home Furnishings",
-    "Apparel & Clothing",
-    "Shoes, Handbags & Accessories",
-    "Bed & Bath",
-    "Kitchen & Kitchen Supplies",
-    "Home & Garden",
-    "Tools, Gadgets & Home Improvement",
-    "Hobbies, Arts & Crafts",
-    "Electronics",
-    "Jewelry",
-    "Gag Gifts & Party Supplies",
-    "Wicca & Wicca Supplies",
-    "Automotive",
-]
+    # 1. Setup Chat Room: "Chatting with the Peeps"
+    db.chat_rooms.update_one(
+        {"name": "Chatting with the Peeps"},
+        {
+            "$set": {
+                "name": "Chatting with the Peeps",
+                "description": "The official hangout zone for all members.",
+                "active": True,
+                "moderated": True
+            }
+        },
+        upsert=True
+    )
+    print("✅ Chat room 'Chatting with the Peeps' is active.")
 
-DEPARTMENT_ALIASES = {
-    "Modern Furniture & Decor": "Home Furnishings",
-    "Apparel": "Apparel & Clothing",
-    "Footwear": "Shoes, Handbags & Accessories",
-    "Handbags & Accessories": "Shoes, Handbags & Accessories",
-    "Kitchen & Small Appliances": "Kitchen & Kitchen Supplies",
-    "Home, Garden & Tools": "Home & Garden",
-    "Arts, Crafts & Hobbies": "Hobbies, Arts & Crafts",
-    "Health & Beauty": "Apparel & Clothing",
-    "Pets & Pet Supplies": "Home & Garden",
-}
+    # 2. Setup Resell Shop Status
+    db.shop_settings.update_one(
+        {"setting": "resell_market"},
+        {"$set": {"active": True, "status": "open"}},
+        upsert=True
+    )
+    print("✅ Resell shop is active and ready to sell.")
 
-
-def _normalize_text(value):
-    return " ".join(str(value or "").lower().replace("-", " ").replace("/", " ").split())
-
-
-def resolve_product_department(title, description, fallback_department, category=None):
-    haystack = _normalize_text(f"{title} {description} {fallback_department} {category or ''}")
-
-    if fallback_department in CANONICAL_DEPARTMENTS:
-        return fallback_department
-    if any(keyword in haystack for keyword in ["wicca", "altar", "ritual", "spell", "crystal", "tarot"]):
-        return "Wicca & Wicca Supplies"
-    if any(keyword in haystack for keyword in ["gag", "party", "novelty", "streamer", "balloon"]):
-        return "Gag Gifts & Party Supplies"
-    if any(keyword in haystack for keyword in ["automotive", "car", "vehicle", "motorcycle", "dashboard"]):
-        return "Automotive"
-    if any(keyword in haystack for keyword in ["sunglasses", "eyewear", "glasses", "handbag", "tote", "purse", "wallet", "crossbody", "shoulder bag"]):
-        return "Shoes, Handbags & Accessories"
-    if any(keyword in haystack for keyword in ["ring", "necklace", "bracelet", "earring", "pendant", "charm", "jewelry", "zirconia", "silver", "gold"]):
-        return "Jewelry"
-    if any(keyword in haystack for keyword in ["yarn", "crochet", "fiber", "embroidery", "paint", "pottery", "craft", "macram", "candle", "altar", "loom", "thread"]):
-        return "Hobbies, Arts & Crafts"
-    if any(keyword in haystack for keyword in ["sneaker", "shoe", "boot", "heel", "trainer"]):
-        return "Shoes, Handbags & Accessories"
-    if any(keyword in haystack for keyword in ["hoodie", "tee", "mask", "costume", "dress", "shirt", "outfit"]):
-        return "Apparel & Clothing"
-    if any(keyword in haystack for keyword in ["camera", "speaker", "light", "projector", "charger", "tracker", "battery", "smart"]):
-        return "Electronics"
-    if any(keyword in haystack for keyword in ["shower", "bath", "curtain", "mat", "towel", "toothbrush", "sheet"]):
-        return "Bed & Bath"
-    if any(keyword in haystack for keyword in ["decor", "vase", "lamp", "shelf", "chair", "table", "accent", "furniture"]):
-        return "Home Furnishings"
-    if any(keyword in haystack for keyword in ["kettle", "blender", "scale", "cookware", "pan", "bakeware", "knife", "food"]):
-        return "Kitchen & Kitchen Supplies"
-    if any(keyword in haystack for keyword in ["serum", "nail", "makeup", "lip balm", "skincare", "beauty", "brush", "roller"]):
-        return "Apparel & Clothing"
-    if any(keyword in haystack for keyword in ["pet", "dog", "cat", "leash", "chew", "groom", "cushion", "feeding bowl"]):
-        return "Home & Garden"
-    if any(keyword in haystack for keyword in ["garden", "soil", "trowel", "pathway", "led", "sword", "dagger", "blade", "knife" ]):
-        return "Home & Garden"
-    return DEPARTMENT_ALIASES.get(fallback_department, fallback_department)
-
-
-def get_product_images(title, description, department, category=None):
-    haystack = _normalize_text(f"{title} {description} {department} {category or ''}")
-    ordered_keywords = [
-        "ring", "necklace", "earring", "bracelet", "sunglasses", "handbag", "purse", "wallet",
-        "yarn", "crochet", "craft", "candle", "sneaker", "shoe", "hoodie", "tee", "camera",
-        "bath", "decor", "kitchen", "beauty", "pet", "garden", "tool", "automotive", "wicca", "party"
+    # 3. Your 14 Custom Departments
+    departments = [
+        "Apparel (Men's, Women's, Children)",
+        "Shoes, Handbags & Accessories",
+        "Bed & Bath",
+        "Home Decor",
+        "Kitchen & Kitchen Supplies",
+        "Home & Garden",
+        "Tools, Gadgets & Home Improvement",
+        "Hobbies & Arts & Crafts (Yarn & Crochet)",
+        "Electronics",
+        "Jewelry, Gag Gifts & Party Supplies",
+        "Wicca & Wicca Supplies",
+        "Health & Beauty (Nail Kits & Wellness)",
+        "Automotive & E-Bike Supplies",
+        "Recreation, E-Bikes & Camping"
     ]
-    for keyword in ordered_keywords:
-        if keyword in haystack:
-            return IMAGE_THEME_MAP.get(keyword, [IMG["hero"]])
-    for keyword, urls in IMAGE_THEME_MAP.items():
-        if keyword in haystack:
-            return urls
-    return [IMG["hero"]]
 
+    image_pool = [
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f"
+    ]
 
-async def seed_admin():
-    email = os.environ.get("ADMIN_EMAIL", "admin@furyzone.com")
-    password = os.environ.get("ADMIN_PASSWORD", "Admin@123")
-    existing = await db.users.find_one({"email": email})
-    if existing is None:
-        await db.users.insert_one({
-            "id": str(uuid.uuid4()), "email": email, "password_hash": hash_password(password),
-            "full_name": "Fury Admin", "phone": None, "roles": ["admin", "customer"],
-            "is_active": True, "avatar_url": None, "created_at": now_iso(),
-        })
-
-
-async def _seed_user(email, name, roles):
-    u = await db.users.find_one({"email": email})
-    if u:
-        return u["id"]
-    uid = str(uuid.uuid4())
-    await db.users.insert_one({
-        "id": uid, "email": email, "password_hash": hash_password("Password@123"),
-        "full_name": name, "phone": None, "roles": roles, "is_active": True,
-        "avatar_url": None, "created_at": now_iso(),
-    })
-    if "seller" in roles:
-        await ensure_seller_profile(uid, f"{name}'s Store")
-    return uid
-
-async def reset_catalog_collections():
-    for collection_name in [
-        "products", "departments", "categories", "brands", "inventory",
-        "resale_listings", "coupons"
-    ]:
-        collection = getattr(db, collection_name)
-        await collection.delete_many({})
-
-
-async def seed_catalog(force=False):
-    if not force and await db.products.count_documents({}) > 0:
-        departments = await db.departments.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
-        department_ids = {department["name"]: department["id"] for department in departments}
-        catalog_complete = set(department_ids) == set(CANONICAL_DEPARTMENTS)
-        if catalog_complete:
-            for department_name in CANONICAL_DEPARTMENTS:
-                product_count = await db.products.count_documents({"department_id": department_ids[department_name], "images.0": {"$exists": True}})
-                if product_count < 50:
-                    catalog_complete = False
-                    break
-        if catalog_complete:
-            return
-        force = True
-    if force:
-        await reset_catalog_collections()
-    dept_ids = {}
+    print("📦 Generating all departments with 50 items each...")
     
-    all_departments = CANONICAL_DEPARTMENTS
-    for name in all_departments:
-        did = str(uuid.uuid4())
-        dept_ids[name] = did
-        await db.departments.insert_one({"id": did, "name": name,
-                                         "slug": name.replace(" ", "-").replace("&", "and").replace(",", "").lower(), "created_at": now_iso()})
-
-    for legacy_name, canonical_name in DEPARTMENT_ALIASES.items():
-        dept_ids[legacy_name] = dept_ids[canonical_name]
-
-    brands = {}
-    for name in ["FuryLab", "Streetline", "Voltage", "Northpeak", "CraftCore", "BeautyPure", "PetPride", "GlowStyle", "HomeFit", "FuryGadgets", "IronForge", "PartyZone"]:
-        bid = str(uuid.uuid4())
-        brands[name] = bid
-        await db.brands.insert_one({"id": bid, "name": name, "created_at": now_iso()})
-
-    cats = {}
-    cat_map = {
-        "Footwear": ["Sneakers", "Boots"], 
-        "Apparel": ["Hoodies", "Tees", "Costumes & Masks"], # Added Costumes & Masks
-        "Electronics": ["Cameras", "Audio", "Smart Gadgets"],
-        "Bed & Bath": ["Linens", "Bath Accessories"],
-        "Modern Furniture & Decor": ["Decor"],
-        "Kitchen & Small Appliances": ["Appliances", "Cookware"],
-        "Health & Beauty": ["Skincare", "Cosmetics", "Nail Care"],
-        "Pets & Pet Supplies": ["Pet Essentials"],
-        "Jewelry": ["Accessories"],
-        "Arts, Crafts & Hobbies": ["Crochet & Yarn", "Craft Kits", "Metaphysical & Wicca", "Party Supplies & Novelties"], # Added Party/Gags
-        "Home, Garden & Tools": ["Garden Supplies", "Home Tools", "Blades & Collectibles"],
-        "Handbags & Accessories": ["Bags", "Sunglasses"]
-    }
-    cat_map.update({
-        "Automotive": ["Car Care", "Auto Accessories"],
-        "Gag Gifts & Party Supplies": ["Gag Gifts", "Party Supplies"],
-        "Wicca & Wicca Supplies": ["Candles & Rituals", "Crystals & Divination"],
-        "Tools, Gadgets & Home Improvement": ["Tools", "Home Improvement"],
-    })
-    for dept, clist in cat_map.items():
-        for c in clist:
-            cid = str(uuid.uuid4())
-            cats[c] = cid
-            await db.categories.insert_one({"id": cid, "name": c,
-                                            "department_id": dept_ids[dept], "created_at": now_iso()})
-
-    products = [
-        ("Fury Runner Low", "Lightweight everyday sneaker with responsive cushioning.", 129.0,
-         "Footwear", "Sneakers", "FuryLab", [IMG["sneaker_white"], IMG["sneaker_grey"]],
-         ["sneakers", "running"], True, 40),
-        ("Voltage Trail Grey", "Rugged trail runner built for grip and speed.", 149.0,
-         "Footwear", "Sneakers", "Voltage", [IMG["sneaker_grey"]], ["sneakers", "trail"], True, 25),
-        ("Streetline Heavy Hoodie", "400gsm heavyweight fleece hoodie, boxy fit.", 89.0,
-         "Apparel", "Hoodies", "Streetline", [IMG["hoodie"]], ["hoodie", "streetwear"], True, 60),
-        ("Fury Zone Tee", "Premium cotton tee with bold Fury Zone print.", 39.0,
-         "Apparel", "Tees", "FuryLab", [IMG["hero"]], ["tee", "cotton"], False, 120),
-         ("Northpeak Field Camera", "Compact mirrorless camera for creators.", 749.0,
-         "Electronics", "Cameras", "Northpeak", [IMG["camera"]], ["camera", "photo"], True, 15),
-    ]
-
-    styles = ["Nordic Chic", "Eco-Comfort", "Urban Minimalist", "Classic Loft", "Boho Elements"]
-
-    # 1. FOOTWEAR GENERATOR (50 Budget Items)
-    footwear_prices = [24.99, 29.99, 34.99, 39.99, 44.99]
-    footwear_images = ["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60"]
-    for idx in range(1, 51):
-        products.append((f"{styles[idx % 5]} Classic Sneaker (Batch #{idx})", "Comfortable daily footwear choice.", random.choice(footwear_prices), "Footwear", "Sneakers", "Streetline", footwear_images, ["shoes"], False, random.randint(20, 80)))
-
-    # 2. APPAREL GENERATOR (50 Budget Items - Now includes Kids/Adult Costumes & Masks)
-    apparel_prices = [14.99, 19.99, 24.99, 29.99, 34.99]
-    apparel_images = ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=60"]
-    apparel_types = ["Adult Deluxe Fantasy Costume Set", "Kids Heroic Adventure Outfit", "Premium Silicone Cosplay Mask (Adult)", "Breathable Festive Costume Mask (Kids)", "Essential Cotton Core Tee"]
-    for idx in range(1, 51):
-        a_type = apparel_types[idx % len(apparel_types)]
-        products.append((f"{styles[idx % 5]} {a_type} (#{idx})", f"High-quality and comfortable {a_type.lower()} tailored perfectly for dress-up events, parties, and daily streetwear flare.", random.choice(apparel_prices), "Apparel", "Costumes & Masks" if "Costume" in a_type or "Mask" in a_type else "Tees", "PartyZone" if "Costume" in a_type or "Mask" in a_type else "FuryLab", apparel_images, ["apparel", "costumes"], False, random.randint(30, 110)))
-
-    # 3. ELECTRONICS GENERATOR (50 Budget Items)
-    electronics_prices = [12.99, 19.99, 24.99, 34.99, 45.00]
-    electronics_images = ["https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=60"]
-    electronics_types = ["Smart LED Pocket Projector", "RGB Color-Sync Desk Light Strip", "Magnetic Wireless MagSafe Battery Pack", "Mini Handheld Turbo Jet Fan", "Bluetooth Item Key Finder Trackers"]
-    for idx in range(1, 51):
-        e_type = electronics_types[idx % len(electronics_types)]
-        products.append((f"{styles[idx % 5]} {e_type} (#{idx})", f"Trending new tech {e_type.lower()} built to upgrade your daily workflow and desk setup efficiently.", random.choice(electronics_prices), "Electronics", "Smart Gadgets", "FuryGadgets", electronics_images, ["gadget", "tech"], False, random.randint(15, 60)))
-
-    # 4. BED & BATH (50 Items)
-    LINEN_PRICES = [12.99, 14.50, 19.99, 24.99, 29.99]
-    linen_images = ["https://images.unsplash.com/photo-1617811449482-31093c8cee16?w=600&auto=format&fit=crop&q=60"]
-    bath_decor_types = ["Complete Shower Curtain Set with Rings", "Anti-Slip Microfiber Bath Mat", "Rustproof Hanging Shower Caddy", "Minimalist Toothbrush Holder Stand", "Luxury Cotton Bath Sheet Pack"]
-    for idx in range(1, 51):
-        b_decor = bath_decor_types[idx % len(bath_decor_types)]
-        products.append((f"{styles[idx % 5]} {b_decor} (#{idx})", f"Aesthetic and highly practical {b_decor.lower()} designed to stylize your bathroom setup cleanly.", random.choice(LINEN_PRICES), "Bed & Bath", "Bath Accessories", "Streetline", linen_images, ["bath", "decor"], False, random.randint(30, 100)))
-
-    # 5. MODERN FURNITURE & DECOR (50 Items)
-    FURNITURE_PRICES = [19.99, 24.99, 29.99, 34.99, 44.99]
-    furniture_images = ["https://images.unsplash.com/photo-1616137422495-1e9e46e2aa77?w=600&auto=format&fit=crop&q=60"]
-    for idx in range(1, 51):
-        products.append((f"{styles[idx % 5]} Accent Decor (Batch #{idx})", "Stunning geometric accent pieces for home styling.", random.choice(FURNITURE_PRICES), "Modern Furniture & Decor", "Decor", "FuryLab", furniture_images, ["decor"], False, random.randint(10, 45)))
-
-    # 6. KITCHEN & SMALL APPLIANCES (50 Budget Items)
-    kitchen_prices = [16.99, 22.99, 27.50, 34.99, 45.00]
-    kitchen_images = ["https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&auto=format&fit=crop&q=60"]
-    kitchen_types = ["Non-Stick Premium Cookware Set", "Heavy-Duty Carbon Steel Bakeware Set", "Personal Countertop Blender", "Electric Rapid Heating Kettle", "Digital Precision Food Scale"]
-    for idx in range(1, 51):
-        k_type = kitchen_types[idx % len(kitchen_types)]
-        products.append((f"{styles[idx % 5]} {k_type} (#{idx})", f"Durable {k_type.lower()} curated for seamless kitchen utility and culinary efficiency.", random.choice(kitchen_prices), "Kitchen & Small Appliances", "Cookware", "Voltage", kitchen_images, ["kitchen", "cookware"], False, random.randint(15, 50)))
-
-    # 7. HEALTH & BEAUTY (50 Budget Items)
-    beauty_prices = [9.99, 14.99, 19.99, 24.99, 32.50]
-    beauty_images = ["https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&auto=format&fit=crop&q=60"]
-    beauty_types = ["Professional Acrylic Nails Kit with UV Lamp", "Organic Facial Hydration Serum", "Synthetic Makeup Brush Set (12-Piece)", "Natural Jade Facial Massage Roller", "Botanical Lip Care Balm Multi-Pack"]
-    for idx in range(1, 51):
-        b_type = beauty_types[idx % len(beauty_types)]
-        products.append((f"{styles[idx % 5]} {b_type} (#{idx})", f"Premium formulation {b_type.lower()} curated to support high-end beauty and cosmetic styling routines.", random.choice(beauty_prices), "Health & Beauty", "Nail Care" if "Nails" in b_type else "Skincare", "BeautyPure", beauty_images, ["beauty", "cosmetics"], False, random.randint(35, 120)))
-
-    # 8. PETS & PET SUPPLIES (50 Budget Items)
-    pet_prices = [9.99, 14.99, 18.50, 22.99, 29.99]
-    pet_images = ["https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=600&auto=format&fit=crop&q=60"]
-    pet_types = ["Orthopedic Pet Cushion Bed", "Double Ceramic Feeding Bowl", "Durable Rope Chew Toy Pack", "Self-Cleaning Grooming Brush", "Reflective Weatherproof Leash"]
-    for idx in range(1, 51):
-        p_type = pet_types[idx % len(pet_types)]
-        products.append((f"{styles[idx % 5]} {p_type} (#{idx})", f"Premium durability {p_type.lower()} to ensure maximum comfort and happiness for your pets.", random.choice(pet_prices), "Pets & Pet Supplies", "Pet Essentials", "PetPride", pet_images, ["pets", "supplies"], False, random.randint(20, 90)))
-
-    # 9. JEWELRY (50 Budget Items)
-    jewelry_prices = [11.99, 15.99, 19.99, 24.99, 29.99]
-    jewelry_images = ["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=60"]
-    jewelry_types = ["Aesthetic Gothic Wicca Pendant Necklace", "Affordable Cubic Zirconia Engagement Set", "Minimalist Sterling Silver Band Ring", "Classic Stud Earrings Multi-Pack", "Adjustable Layered Charm Bracelet"]
-    for idx in range(1, 51):
-        j_type = jewelry_types[idx % len(jewelry_types)]
-        products.append((f"{styles[idx % 5]} {j_type} (#{idx})", f"Finely crafted {j_type.lower()} detailed beautifully to accentuate personal flair and statement styling.", random.choice(jewelry_prices), "Jewelry", "Accessories", "GlowStyle", jewelry_images, ["jewelry", "rings"], False, random.randint(15, 75)))
-
-    # 10. ARTS, CRAFTS & HOBBIES (50 Items - Now includes Adult Gag Gifts & Party Supplies)
-    craft_prices = [5.99, 9.99, 14.50, 19.99, 24.99]
-    craft_images = ["https://images.unsplash.com/photo-1584992231908-03ff25fb26a4?w=600&auto=format&fit=crop&q=60"]
-    craft_types = ["Hilarious Adult Gag Gift Novelty Item", "Complete Party Supplies & Streamers Pack", "Premium Acrylic Crochet Yarn Pack", "Natural Soy Altar Ritual Spell Candles (Pack of 12)", "Celestial Moon Phase Embroidered Altar Cloth"]
-    for idx in range(1, 51):
-        c_type = craft_types[idx % len(craft_types)]
-        products.append((f"{styles[idx % 5]} {c_type} (#{idx})", f"Fun, functional, and decorative {c_type.lower()} designed to liven up social gatherings, celebrations, or unique crafting styles seamlessly.", random.choice(craft_prices), "Arts, Crafts & Hobbies", "Party Supplies & Novelties" if "Gag" in c_type or "Party" in c_type else "Metaphysical & Wicca" if "Altar" in c_type else "Crochet & Yarn", "PartyZone" if "Gag" in c_type or "Party" in c_type else "CraftCore", craft_images, ["crafts", "novelty", "party"], False, random.randint(25, 110)))
-
-    # 11. HOME, GARDEN & TOOLS (50 Items)
-    garden_prices = [14.99, 19.99, 24.99, 34.99, 45.00]
-    garden_images = ["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=60"]
-    garden_types = ["Decorative Celtic Short Sword with Sheath", "Ornate Stainless Steel Collectible Dagger", "Heavy-Duty Full Tang Camping Hunting Knife", "Ergonomic Garden Hand Trowel Set", "Solar-Powered Pathway LED Lights (Pack of 6)"]
-    for idx in range(1, 51):
-        g_type = garden_types[idx % len(garden_types)]
-        products.append((f"{styles[idx % 5]} {g_type} (#{idx})", f"Premium {g_type.lower()} built with meticulous design for unique home collection displays and reliable outdoor utilities.", random.choice(garden_prices), "Home, Garden & Tools", "Blades & Collectibles" if "Sword" in g_type or "Dagger" in g_type or "Knife" in g_type else "Garden Supplies", "IronForge" if "Sword" in g_type or "Dagger" in g_type or "Knife" in g_type else "HomeFit", garden_images, ["home", "blades", "tools"], False, random.randint(15, 65)))
-
-    # 12. HANDBAGS & ACCESSORIES (50 Items)
-    bag_prices = [15.99, 19.99, 25.50, 29.99, 39.99]
-    bag_images = ["https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=60"]
-    bag_types = ["Classic Designer-Style Tote Handbag", "UV-400 Protection Classic Sunglasses", "Compact Faux-Leather Crossbody Purse", "Slim RFID Blocking Travel Wallet", "Aesthetic Shoulder Hobo Bag"]
-    for idx in range(1, 51):
-        b_type = bag_types[idx % len(bag_types)]
-        products.append((f"{styles[idx % 5]} {b_type} (#{idx})", f"Chic {b_type.lower()} adding a seamless and highly functional finish to daily streetwear.", random.choice(bag_prices), "Handbags & Accessories", "Bags" if "Bag" in b_type or "Purse" in b_type else "Sunglasses", "GlowStyle", bag_images, ["accessories", "bags"], False, random.randint(20, 85)))
-
-    # 13. WICCA, PARTY, AND AUTOMOTIVE DEPARTMENTS (50 distinct items each)
-    department_batches = [
-        ("Wicca & Wicca Supplies", "Crystals & Divination", "FuryLab", ["Wicca Crystal Altar Kit", "Moon Phase Tarot Deck", "Herbal Spell Jar Set", "Cleansing Sage Bundle", "Celestial Ritual Journal"], "wicca"),
-        ("Gag Gifts & Party Supplies", "Party Supplies", "PartyZone", ["Hilarious Gag Gift Box", "Birthday Balloon Garland Kit", "Funny Novelty Mug", "Confetti Celebration Pack", "Photo Booth Party Props"], "party"),
-        ("Automotive", "Auto Accessories", "FuryGadgets", ["Universal Car Phone Mount", "LED Interior Car Light Kit", "Microfiber Auto Detailing Set", "Emergency Roadside Tool Kit", "Waterproof Trunk Organizer"], "automotive"),
-        ("Hobbies, Arts & Crafts", "Crochet & Yarn", "CraftCore", ["Premium Crochet Yarn Bundle", "Ergonomic Crochet Hook Set", "Embroidery Starter Kit", "Watercolor Pocket Paint Set", "DIY Macrame Wall Hanging Kit"], "craft"),
-        ("Tools, Gadgets & Home Improvement", "Tools", "IronForge", ["Cordless Precision Screwdriver Set", "Magnetic Hardware Organizer", "Compact Laser Measure", "Heavy-Duty Utility Knife", "Smart Socket Tester"], "tool"),
-    ]
-    for department, category, brand, item_types, image_theme in department_batches:
-        for idx in range(1, 51):
-            item_type = item_types[idx % len(item_types)]
-            products.append((
-                f"{styles[idx % len(styles)]} {item_type} #{idx}",
-                f"A carefully selected {item_type.lower()} with practical details for the {department.lower()} collection.",
-                round(8.99 + (idx % 8) * 4.5, 2), department, category, brand,
-                IMAGE_THEME_MAP[image_theme], [image_theme, "collection"], False, random.randint(15, 90),
-            ))
-
-
-    # Database insertions execution
-    for title, desc, price, dept, cat, brand, imgs, tags, feat, stock in products:
-        resolved_dept = resolve_product_department(title, desc, dept, cat)
-        resolved_cat = cat
-        if resolved_dept == "Shoes, Handbags & Accessories" and "sunglasses" in _normalize_text(title + " " + desc):
-            resolved_cat = "Sunglasses"
-        elif resolved_dept == "Shoes, Handbags & Accessories" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["tote", "purse", "crossbody", "wallet", "handbag"]):
-            resolved_cat = "Bags"
-        elif resolved_dept == "Jewelry" and "ring" in _normalize_text(title + " " + desc):
-            resolved_cat = "Accessories"
-        elif resolved_dept == "Hobbies, Arts & Crafts" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["yarn", "crochet", "loom", "embroidery", "thread"]):
-            resolved_cat = "Crochet & Yarn"
-        elif resolved_dept == "Wicca & Wicca Supplies" and any(keyword in _normalize_text(title + " " + desc) for keyword in ["candle", "altar", "ritual", "spell", "wicca"]):
-            resolved_cat = "Metaphysical & Wicca"
-        elif resolved_dept == "Gag Gifts & Party Supplies":
-            resolved_cat = "Party Supplies"
-
-        resolved_dept_id = dept_ids[resolved_dept]
-        resolved_cat_id = cats.get(resolved_cat, cats.get(cat))
-        product_images = get_product_images(title, desc, resolved_dept, resolved_cat) or imgs
-        pid = str(uuid.uuid4())
-        await db.products.insert_one({
-            "id": pid, "title": title, "description": desc, "price": price,
-            "department_id": resolved_dept_id, "category_id": resolved_cat_id, "brand_id": brands[brand],
-            "images": product_images, "tags": tags,
-            "variants": [
-                {"id": str(uuid.uuid4()), "name": "Standard", "price": price, "stock": stock, "sku": None},
-            ],
-            "stock": stock, "featured": feat, "is_active": True, "created_at": now_iso(),
-        })
-        await db.inventory.insert_one({"id": str(uuid.uuid4()), "product_id": pid,
-                                       "stock": stock, "reserved": 0, "updated_at": now_iso()})
-
-    # Demo sellers + resale listings
-    seller1 = await _seed_user("seller@furyzone.com", "Riley Sells", ["customer", "seller"])
-    await _seed_user("buyer@furyzone.com", "Sam Buyer", ["customer"])
-
-    if await db.resale_listings.count_documents({"seller_id": seller1}) == 0:
-        listings = [
-            ("Vintage Film Camera", "Well-loved classic film camera, fully working.", 210.0, "good", [IMG["camera"]]),
-            ("Used Grey Trail Sneakers", "Worn a handful of times, size 10, great grip left.", 65.0, "like_new", [IMG["sneaker_grey"]]),
-            ("Cropped Streetwear Hoodie", "Barely worn cropped hoodie, super clean.", 45.0, "like_new", [IMG["hoodie"]]),
-        ]
-        for title, desc, price, cond, imgs in listings:
-            await db.resale_listings.insert_one({
-                "id": str(uuid.uuid4()), "seller_id": seller1, "title": title,
-                "description": desc, "price": price, "condition": cond,
-                "category_id": None, "brand_id": None, "images": imgs, "tags": [],
-                "status": "active", "created_at": now_iso(),
+    for dept_idx, dept_name in enumerate(departments, start=1):
+        items = []
+        for i in range(1, 51):
+            item_name = f"{dept_name.split('(')[0].strip()} Item #{i}"
+            items.append({
+                "item_id": f"dept-{dept_idx}-item-{i}",
+                "name": item_name,
+                "department": dept_name,
+                "price": round(random.uniform(9.99, 199.99), 2),
+                "image_url": random.choice(image_pool),
+                "description": f"Premium selection for {dept_name.lower()}, hand-picked for The Fury Zone Studio.",
+                "in_stock": True,
+                "featured": i <= 5
             })
+        
+        db.departments.update_one(
+            {"department_name": dept_name},
+            {"$set": {"department_name": dept_name, "items": items, "total_items": 50}},
+            upsert=True
+        )
+        print(f"   -> Populated '{dept_name}' with 50 items.")
 
-    if not await db.coupons.find_one({"code": "FURY10"}):
-        await db.coupons.insert_one({"id": str(uuid.uuid4()), "code": "FURY10",
-                                     "percent_off": 10, "description": "10% off your order",
-                                     "active": True, "created_at": now_iso()})
+    print("🎉 All custom departments, 700 items, the resell shop, and 'Chatting with the Peeps' are successfully configured!")
 
-
-async def create_indexes():
-    await db.users.create_index("email", unique=True)
-    await db.users.create_index("id")
-    await db.products.create_index("id")
-    await db.resale_listings.create_index("id")
-    await db.resale_listings.create_index("status")
-    await db.orders.create_index("user_id")
-    await db.payment_transactions.create_index("session_id")
-
-
-async def run_seed(force=False):
-    await create_indexes()
-    await seed_admin()
-    await seed_catalog(force=force)
+if __name__ == "__main__":
+    seed_database()
