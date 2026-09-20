@@ -1,21 +1,12 @@
 import os
-from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
-from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv()
 
-mongo_url = os.environ.get("MONGO_URL", "")
+MONGO_URL = os.getenv("MONGO_URI") or os.getenv("MONGODB_URL")
+if not MONGO_URL:
+    raise ValueError("❌ MONGO_URI or MONGODB_URL is missing in environment variables.")
 
-client = AsyncIOMotorClient(mongo_url)
-
-db_name = os.environ.get("DB_NAME", "fury_zone")
-db = client[db_name]
-
-
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-NO_ID = {"_id": 0}
+client = AsyncIOMotorClient(MONGO_URL)
+db = client.get_default_database() # or client["your_database_name"]
