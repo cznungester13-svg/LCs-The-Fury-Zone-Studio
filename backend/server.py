@@ -5,22 +5,26 @@ from database import client, db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Verify connection
+    # Startup: Verify database connection
     try:
         await client.admin.command('ping')
         print("Successfully connected to MongoDB!")
     except Exception as e:
         print(f"Failed to connect to MongoDB: {e}")
     yield
-    # Shutdown: Close connection cleanly
+    # Shutdown: Close database connection cleanly
     client.close()
     print("MongoDB connection closed.")
 
-app = FastAPI(title="LCs The Fury Zone Studio API", lifespan=lifespan)
+app = FastAPI(
+    title="LCs The Fury Zone Studio API",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Update to your specific frontends/domains in production
+    allow_origins=["*"],  # Adjust domains in production as needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
