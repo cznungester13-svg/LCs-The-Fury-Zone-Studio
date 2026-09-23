@@ -49,8 +49,13 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b-2 border-black" data-testid="navbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
-            <Link to="/" className="shrink-0" data-testid="logo-link">
-              <span className="font-head font-black text-xl sm:text-2xl tracking-tighter uppercase leading-none">
+            <Link to="/" className="shrink-0 flex items-center gap-2" data-testid="logo-link">
+              <img
+                src="/fury-zone-logo.jpeg"
+                alt="LCs The Fury Zone Studio"
+                className="h-11 w-auto rounded-md border-2 border-black object-contain"
+              />
+              <span className="hidden sm:inline font-head font-black text-lg tracking-tighter uppercase leading-none">
                 LCs<span className="text-[#FF3B30]"> Fury</span>Zone
               </span>
             </Link>

@@ -28,10 +28,12 @@ export const Footer = () => {
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
-                <Flame className="h-5 w-5" />
-              </span>
+            <div className="flex items-center gap-3">
+              <img
+                src="/fury-zone-logo.jpeg"
+                alt="LCs The Fury Zone Studio"
+                className="h-12 w-12 rounded-lg object-cover border border-white/20"
+              />
               <span className="font-display text-lg font-extrabold">LC's Fury Zone</span>
             </div>
             <p className="mt-4 text-sm text-white/60">
