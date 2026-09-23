@@ -32,6 +32,14 @@ export function CartProvider({ children }) {
     return data;
   };
 
+  const addItem = async (product) => {
+    return addToCart({
+      item_type: product.item_type || "product",
+      item_id: product.id || product.item_id,
+      quantity: 1,
+    });
+  };
+
   const updateItem = async (payload) => {
     const { data } = await api.post("/cart/update", payload);
     setCart(data);
@@ -45,7 +53,7 @@ export function CartProvider({ children }) {
   const count = cart.items?.reduce((a, i) => a + i.quantity, 0) || 0;
 
   return (
-    <CartContext.Provider value={{ cart, count, refreshCart, addToCart, updateItem, removeItem }}>
+    <CartContext.Provider value={{ cart, count, refreshCart, addToCart, addItem, updateItem, removeItem }}>
       {children}
     </CartContext.Provider>
   );

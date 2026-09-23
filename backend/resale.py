@@ -31,6 +31,12 @@ async def _decorate_listing(l: dict):
     reviews = await db.reviews.find({"target_id": l["id"]}, NO_ID).to_list(500)
     l["rating"] = round(sum(r["rating"] for r in reviews) / len(reviews), 1) if reviews else 0
     l["review_count"] = len(reviews)
+    # Frontend compatibility aliases
+    l["name"] = l.get("title")
+    imgs = l.get("images") or []
+    l["image"] = imgs[0] if imgs else ""
+    l["image_url"] = l["image"]
+    l["item_id"] = l["id"]
     return l
 
 

@@ -33,3 +33,34 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"status": "online", "project": "The Fury Zone Studio"}
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
+
+
+# ---------------- Routers ----------------
+# Every router is mounted under /api to match the Kubernetes ingress + Vercel rewrite.
+from auth import router as auth_router
+from catalog import router as catalog_router
+from shop import router as shop_router
+from resale import router as resale_router
+from raffle import router as raffle_router
+from chat import router as chat_router
+from engage import router as engage_router
+from storage import router as storage_router
+from admin_routes import router as admin_router
+
+for _r in (
+    auth_router,
+    catalog_router,
+    shop_router,
+    resale_router,
+    raffle_router,
+    chat_router,
+    engage_router,
+    storage_router,
+    admin_router,
+):
+    app.include_router(_r, prefix="/api")

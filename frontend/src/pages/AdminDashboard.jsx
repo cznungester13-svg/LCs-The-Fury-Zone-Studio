@@ -20,7 +20,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (tab === "overview") {
-      api.get("/api/admin/metrics")
+      api.get("/admin/metrics")
         .then((res) => setMetrics(res.data))
         .catch((err) => console.error("Failed to load metrics", err));
     }

@@ -27,6 +27,7 @@ async def get_or_create_raffle():
         "status": "open", "winner_id": None, "created_at": now_iso(),
     }
     await db.raffles.insert_one(raffle)
+    raffle.pop("_id", None)
     return raffle
 
 

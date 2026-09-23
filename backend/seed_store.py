@@ -1,11 +1,13 @@
 import os
 import random
+from dotenv import load_dotenv
 from pymongo import MongoClient
 
-# Connect to your MongoDB database
-MONGO_URI = "mongodb+srv://cznungester13_db_user:Myaccount013@cluster0.i3fipti.mongodb.net/?appName=Cluster0"
+# Use environment configuration only (never hardcode credentials).
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URL") or os.getenv("MONGO_URL")
 client = MongoClient(MONGO_URI)
-db = client.get_database("fury_zone")
+db = client[os.getenv("DB_NAME", "test_database")]
 
 def seed_database():
     print("🚀 Starting Temu-style ultra-discount store initialization...")

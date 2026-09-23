@@ -26,7 +26,7 @@ async def post_message(data: dict, user: dict = Depends(get_current_user)):
         "created_at": now_iso(),
     }
     await db.chat.insert_one(message)
-    return message
+    return {k: v for k, v in message.items() if k != "_id"}
 
 @router.delete("/messages/{message_id}")
 async def delete_message(message_id: str, admin: dict = Depends(get_current_admin)):

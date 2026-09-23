@@ -101,26 +101,40 @@ def require_roles(role: str):
 
 # ---------------- Seller profile ----------------
 
-async def ensure_seller_profile(user_id: str, store_name: str):
+async def ensure_seller_profile(user_id: str, store_name: str = None):
     existing = await db.seller_profiles.find_one(
         {"user_id": user_id},
         NO_ID
     )
 
-    if existing:
-        return existing
+    if not store_name:
+        u = await db.users.find_one({"id": user_id}, NO_ID)
+        store_name = (u and u.get("full_name")) or "My Store"
 
-    profile = {
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "store_name": store_name,
-        "created_at": now_iso(),
-        "status": "active",
-    }
+    if not existing:
+        profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "store_name": store_name,
+            "created_at": now_iso(),
+            "status": "active",
+        }
+        await db.seller_profiles.insert_one(profile)
+        existing = profile
 
-    await db.seller_profiles.insert_one(profile)
+    # Ensure a balance ledger exists for the seller
+    bal = await db.seller_balances.find_one({"user_id": user_id}, NO_ID)
+    if not bal:
+        await db.seller_balances.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "available": 0.0,
+            "pending": 0.0,
+            "total_earned": 0.0,
+            "updated_at": now_iso(),
+        })
 
-    return profile
+    return existing
 
 
 # ---------------- Models ----------------
@@ -137,6 +151,15 @@ class LoginIn(BaseModel):
 
 
 # ---------------- Routes ----------------
+
+def _public_user(user: dict) -> dict:
+    return {
+        "id": user["id"],
+        "email": user["email"],
+        "full_name": user.get("full_name", ""),
+        "roles": user.get("roles", []),
+    }
+
 
 @router.post("/register")
 async def register(body: RegisterIn):
@@ -163,10 +186,19 @@ async def register(body: RegisterIn):
 
     await db.users.insert_one(user)
 
+    token = create_token(user["id"])
     return {
         "message": "Account created",
-        "user_id": user["id"]
+        "token": token,
+        "access_token": token,
+        "token_type": "bearer",
+        "user": _public_user(user),
     }
+
+
+@router.get("/me")
+async def me(user: dict = Depends(get_current_user)):
+    return _public_user(user)
 
 
 @router.post("/login")
@@ -194,11 +226,8 @@ async def login(body: LoginIn):
     token = create_token(user["id"])
 
     return {
+        "token": token,
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "roles": user.get("roles", [])
-        }
+        "user": _public_user(user),
     }
