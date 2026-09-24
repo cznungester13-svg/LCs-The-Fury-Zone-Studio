@@ -15,6 +15,10 @@ export default function Home() {
   const [listings, setListings] = useState(null);
 
   useEffect(() => {
+    api.get("/departments")
+      .then(({ data }) => setDepartments(Array.isArray(data) ? data : []))
+      .catch(() => setDepartments([]));
+
     api.get("/products?featured=true&limit=4")
       .then(({ data }) => setFeatured(Array.isArray(data) ? data : data?.products || []))
       .catch(() => setFeatured([]));
@@ -41,6 +45,9 @@ export default function Home() {
               <Link to="/store"><Btn data-testid="hero-shop-btn">Shop the store <ArrowRight size={18} /></Btn></Link>
               <Link to="/sell"><Btn variant="secondary" data-testid="hero-sell-btn">Sell an item</Btn></Link>
             </div>
+            <p className="mt-6 font-mono text-xs sm:text-sm uppercase tracking-widest bg-yellow-300 text-black inline-block border-2 border-black px-3 py-1.5 font-bold" data-testid="hero-bonus">
+              🎁 New shoppers get 3 items FREE
+            </p>
           </div>
           <div className="relative">
             <div className="border-2 border-black brutal-shadow overflow-hidden">

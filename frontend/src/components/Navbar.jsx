@@ -35,7 +35,7 @@ export function Navbar() {
   ];
 
   // Clean string definition for the infinite ticker line
-  const tickerText = "⚡ NEW DROPS WEEKLY • RESALE LISTINGS GO LIVE INSTANTLY • 10% OFF WITH CODE FURY10 • FREE VIBES ONLY • ";
+  const tickerText = "⚡ 3 FREE ITEMS FOR NEW SHOPPERS • NEW DROPS WEEKLY • RESALE LISTINGS GO LIVE INSTANTLY • 10% OFF WITH CODE FURY10 • FREE VIBES ONLY • ";
 
   return (
     <>

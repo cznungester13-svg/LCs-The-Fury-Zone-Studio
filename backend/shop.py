@@ -176,26 +176,24 @@ async def create_checkout(body: CheckoutRequest, user: dict = Depends(get_curren
             coupon_code = c["code"]
 
     # Amounts computed SERVER-SIDE from the stored cart (never trust the client).
-    subtotal, discount, shipping, total = _compute_totals(cart["items"], discount_percent)
+    subtotal, discount, shipping, _ = _compute_totals(cart["items"], discount_percent)
 
-    if not stripe or not stripe.api_key:
-        raise HTTPException(status_code=503, detail="Stripe is not configured")
+    # New-shopper bonus: the cheapest N item-units are free (N = remaining bonus).
+    free_remaining = int(user.get("free_items_remaining", 0) or 0)
+    bonus_discount = 0.0
+    free_items_used = 0
+    if free_remaining > 0:
+        units = []
+        for i in cart["items"]:
+            units += [i["price"]] * int(i["quantity"])
+        units.sort()
+        free_items_used = min(free_remaining, len(units))
+        bonus_discount = round(sum(units[:free_items_used]), 2)
 
-    item_count = sum(i["quantity"] for i in cart["items"])
-    session = stripe.checkout.Session.create(
-        mode="payment",
-        line_items=[{
-            "price_data": {
-                "currency": "usd",
-                "product_data": {"name": f"LCs The Fury Zone \u2014 {item_count} item(s)"},
-                "unit_amount": round(total * 100),
-            },
-            "quantity": 1,
-        }],
-        success_url=f"{body.origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{body.origin_url}/cart",
-        metadata={"user_id": user["id"]},
-    )
+    goods_total = max(round(subtotal - discount - bonus_discount, 2), 0.0)
+    if bonus_discount > 0 and goods_total <= 0:
+        shipping = 0.0  # fully covered by the welcome bonus
+    final_total = round(goods_total + shipping, 2)
 
     order_items = [{
         "item_id": i["item_id"],
@@ -217,22 +215,59 @@ async def create_checkout(body: CheckoutRequest, user: dict = Depends(get_curren
         if saved:
             shipping_address = saved
 
-    await db.payment_transactions.insert_one({
+    tx_base = {
         "id": str(uuid.uuid4()),
-        "session_id": session.id,
         "user_id": user["id"],
         "items": order_items,
         "subtotal": subtotal,
         "discount": discount,
+        "bonus_discount": bonus_discount,
+        "free_items_used": free_items_used,
         "shipping": shipping,
-        "amount": float(total),
+        "amount": float(final_total),
         "coupon_code": coupon_code,
         "shipping_address": shipping_address,
-        "payment_status": "pending",
-        "status": "initiated",
         "order_created": False,
         "created_at": now_iso(),
         "updated_at": now_iso(),
+    }
+
+    # Free order: total below Stripe's $0.50 minimum -> fulfil immediately, no charge.
+    if final_total < 0.50:
+        session_id = f"free_{uuid.uuid4().hex}"
+        await db.payment_transactions.insert_one({
+            **tx_base, "session_id": session_id,
+            "payment_status": "pending", "status": "initiated",
+        })
+        await _mark_paid_and_create_order(session_id)
+        return {"url": f"{body.origin_url}/checkout/success?session_id={session_id}",
+                "session_id": session_id, "free": True}
+
+    if not stripe or not stripe.api_key:
+        raise HTTPException(status_code=503, detail="Stripe is not configured")
+
+    item_count = sum(i["quantity"] for i in cart["items"])
+    label = f"LCs The Fury Zone \u2014 {item_count} item(s)"
+    if free_items_used:
+        label += f" ({free_items_used} free)"
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        line_items=[{
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": label},
+                "unit_amount": round(final_total * 100),
+            },
+            "quantity": 1,
+        }],
+        success_url=f"{body.origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{body.origin_url}/cart",
+        metadata={"user_id": user["id"]},
+    )
+
+    await db.payment_transactions.insert_one({
+        **tx_base, "session_id": session.id,
+        "payment_status": "pending", "status": "initiated",
     })
 
     return {"url": session.url, "session_id": session.id}
@@ -262,6 +297,8 @@ async def _mark_paid_and_create_order(session_id: str):
         "items": tx.get("items", []),
         "subtotal": tx.get("subtotal", 0),
         "discount": tx.get("discount", 0),
+        "bonus_discount": tx.get("bonus_discount", 0),
+        "free_items_used": tx.get("free_items_used", 0),
         "shipping": tx.get("shipping", 0),
         "total": tx.get("amount", 0),
         "coupon_code": tx.get("coupon_code"),
@@ -273,6 +310,15 @@ async def _mark_paid_and_create_order(session_id: str):
     await db.orders.insert_one(order)
     await db.payment_transactions.update_one({"session_id": session_id}, {"$set": {"order_id": order_id}})
     await db.carts.update_one({"user_id": tx["user_id"]}, {"$set": {"items": [], "updated_at": now_iso()}})
+
+    # Consume the new-shopper free-item bonus (never below zero).
+    used = int(tx.get("free_items_used", 0) or 0)
+    if used:
+        await db.users.update_one({"id": tx["user_id"]}, {"$inc": {"free_items_remaining": -used}})
+        await db.users.update_one(
+            {"id": tx["user_id"], "free_items_remaining": {"$lt": 0}},
+            {"$set": {"free_items_remaining": 0}},
+        )
 
     try:
         await create_notification(tx["user_id"], "Order confirmed",

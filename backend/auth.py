@@ -158,6 +158,7 @@ def _public_user(user: dict) -> dict:
         "email": user["email"],
         "full_name": user.get("full_name", ""),
         "roles": user.get("roles", []),
+        "free_items_remaining": user.get("free_items_remaining", 0),
     }
 
 
@@ -181,6 +182,7 @@ async def register(body: RegisterIn):
         "full_name": body.full_name,
         "roles": ["customer"],
         "is_active": True,
+        "free_items_remaining": 3,
         "created_at": now_iso(),
     }
 

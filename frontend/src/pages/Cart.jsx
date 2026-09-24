@@ -42,10 +42,27 @@ export default function Cart() {
 
   if (!cart) return <Spinner />;
 
-  // Derived state calculations (resilient to API delay variations)
+  // Derived state calculations (mirrors backend checkout math)
   const subtotal = cart.items?.reduce((acc, it) => acc + (Number(it.price || 0) * (it.quantity || 1)), 0) || 0;
   const discount = applied ? (subtotal * applied.percent_off) / 100 : 0;
-  const total = Math.max(subtotal - discount, 0);
+
+  const freeRemaining = user?.free_items_remaining || 0;
+  let bonus = 0;
+  let freeUsed = 0;
+  if (freeRemaining > 0 && cart.items?.length) {
+    const units = [];
+    cart.items.forEach((it) => {
+      for (let k = 0; k < (it.quantity || 1); k++) units.push(Number(it.price || 0));
+    });
+    units.sort((a, b) => a - b);
+    freeUsed = Math.min(freeRemaining, units.length);
+    bonus = units.slice(0, freeUsed).reduce((a, b) => a + b, 0);
+  }
+
+  const goods = Math.max(subtotal - discount - bonus, 0);
+  let shipping = subtotal >= 75 || subtotal === 0 ? 0 : 6.99;
+  if (bonus > 0 && goods <= 0) shipping = 0;
+  const total = Math.max(goods + shipping, 0);
 
   const applyCoupon = async () => {
     if (!coupon.trim()) return toast.error("Please enter a coupon code");
@@ -93,6 +110,11 @@ export default function Cart() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter border-b-2 border-black pb-4 mb-8">Cart</h1>
+      {freeRemaining > 0 && (
+        <div className="mb-6 border-2 border-black bg-[#FF3B30] text-white font-bold uppercase px-4 py-3 flex items-center gap-2" data-testid="cart-bonus-banner">
+          🎁 New Shopper Bonus — your {freeRemaining} cheapest item{freeRemaining > 1 ? "s" : ""} are FREE at checkout!
+        </div>
+      )}
       <div className="grid lg:grid-cols-[1fr_360px] gap-10">
         <div className="space-y-4">
           {cart.items.map((it) => (
@@ -154,6 +176,8 @@ export default function Cart() {
           <div className="space-y-2 border-t-2 border-black pt-4 font-mono text-sm">
             <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
             {applied && <Row label={`Discount (${applied.percent_off}%)`} value={`-$${discount.toFixed(2)}`} accent />}
+            {freeUsed > 0 && <Row label={`New shopper bonus (${freeUsed} free)`} value={`-$${bonus.toFixed(2)}`} accent />}
+            <Row label="Shipping" value={shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`} />
             <div className="flex justify-between text-xl font-black pt-2 border-t border-zinc-200"><span>Total</span><span data-testid="cart-total">${total.toFixed(2)}</span></div>
           </div>
           <Btn onClick={checkout} disabled={checkingOut} className="w-full" data-testid="checkout-btn">{checkingOut ? "Redirecting..." : "Checkout with Stripe"}</Btn>
