@@ -36,21 +36,7 @@ export default function ListingDetail() {
     setActiveImg(0);
   }, [listing]);
 
-  if (!listing) return <Spinner />;
-
-  const sold = String(listing.status).toLowerCase() === "sold";
-
-  const handleAdd = async () => {
-    if (!user) return toast.error("Please login to buy");
-    try {
-      await addToCart({ item_type: "listing", item_id: listing.id, quantity: 1 });
-      toast.success("Added to cart");
-    } catch (e) {
-      toast.error(e.response?.data?.detail || "Could not add to cart");
-    }
-  };
-
-  const submitReview = async (e) => {
+  const submitReview = useCallback(async (e) => {
     e.preventDefault();
     if (!user) return toast.error("Please login");
 
@@ -67,8 +53,9 @@ export default function ListingDetail() {
     } catch (e) {
       toast.error(e.response?.data?.detail || "Could not post review");
     }
-  };
+  }, [user, id, rating, comment, loadReviews]);
 
+  // Moved useMemo up here so it always runs in the exact same order on every render
   const reviewProps = useMemo(
     () => ({
       reviews,
@@ -79,8 +66,22 @@ export default function ListingDetail() {
       onSubmit: submitReview,
       user,
     }),
-    [reviews, rating, comment, user]
+    [reviews, rating, comment, user, submitReview]
   );
+
+  if (!listing) return <Spinner />;
+
+  const sold = String(listing.status).toLowerCase() === "sold";
+
+  const handleAdd = async () => {
+    if (!user) return toast.error("Please login to buy");
+    try {
+      await addToCart({ item_type: "listing", item_id: listing.id, quantity: 1 });
+      toast.success("Added to cart");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Could not add to cart");
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
