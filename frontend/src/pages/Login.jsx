@@ -30,10 +30,16 @@ export default function Login() {
     }
   };
 
-  const quick = (em) => { 
-    setEmail(em); 
-    setPassword(em.startsWith("admin") ? "Admin@123" : "Password@123"); 
+  const quick = (emailValue, passwordValue) => {
+    setEmail(emailValue);
+    setPassword(passwordValue);
   };
+
+  const demoAccounts = [
+    { label: "Customer", email: "customer@furyzone.com", password: "Customer123!" },
+    { label: "Seller", email: "seller@furyzone.com", password: "Seller123!" },
+    { label: "Admin", email: "admin@furyzone.com", password: "Admin123!" },
+  ];
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
@@ -59,10 +65,20 @@ export default function Login() {
         <div className="mt-6 pt-4 border-t-2 border-dashed border-zinc-200 text-xs">
           <p className="font-mono uppercase tracking-widest text-zinc-400 mb-2">Quick demo login</p>
           <div className="flex gap-2 flex-wrap">
-            <button onClick={() => quick("buyer@furyzone.com")} className="border border-black px-2 py-1 hover:bg-black hover:text-white">Buyer</button>
-            <button onClick={() => quick("seller@furyzone.com")} className="border border-black px-2 py-1 hover:bg-black hover:text-white">Seller</button>
-            <button onClick={() => quick("admin@furyzone.com")} className="border border-black px-2 py-1 hover:bg-black hover:text-white">Admin</button>
+            {demoAccounts.map((account) => (
+              <button
+                key={account.email}
+                onClick={() => quick(account.email, account.password)}
+                className="border border-black px-2 py-1 hover:bg-black hover:text-white"
+                type="button"
+              >
+                {account.label}
+              </button>
+            ))}
           </div>
+          <p className="mt-3 text-[11px] text-zinc-500">
+            Seeded demo users: customer@furyzone.com / Customer123!, admin@furyzone.com / Admin123!
+          </p>
         </div>
       </div>
     </div>

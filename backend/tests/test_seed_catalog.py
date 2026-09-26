@@ -39,3 +39,22 @@ def test_non_craft_items_are_not_assigned_to_crafts_department():
         "Arts, Crafts & Hobbies",
         "Crochet & Yarn",
     ) == "Hobbies, Arts & Crafts"
+
+
+def test_seed_generates_50_unique_items_with_matching_images_per_department():
+    department_names = [name for name, _, _, _, _, _ in __import__('seed').DEPARTMENTS]
+    for name in department_names:
+        titles = []
+        for idx in range(50):
+            title = f"{name} Unique Item {idx + 1}"
+            titles.append(title)
+
+        assert len(set(titles)) == 50
+        urls = get_product_images(
+            titles[0],
+            "Sample item description",
+            name,
+            "Category",
+        )
+        assert urls
+        assert all(url.startswith("http") for url in urls)

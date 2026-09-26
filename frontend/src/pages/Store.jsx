@@ -85,6 +85,28 @@ export default function Store() {
         <Link to="/marketplace"><Btn variant="secondary" data-testid="store-resale-btn">Shop resale</Btn></Link>
       </div>
 
+      {departments.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-500">Browse departments</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[['', 'All'], ...departments.map((d) => [d.id, d.name])].map(([id, label]) => (
+              <button
+                key={id || 'all'}
+                type="button"
+                onClick={() => setDepartmentId(id)}
+                className={`border-2 px-3 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
+                  departmentId === id ? 'bg-[#FF3B30] text-white border-[#FF3B30]' : 'border-black bg-white text-black hover:bg-zinc-100'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid lg:grid-cols-[240px_1fr] gap-8">
         <aside className="space-y-6">
           <div className="flex items-center gap-2 font-black uppercase"><SlidersHorizontal size={18} /> Filters</div>

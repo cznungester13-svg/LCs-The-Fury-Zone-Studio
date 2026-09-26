@@ -8,6 +8,7 @@ import os
 import sys
 import uuid
 import random
+import re
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
@@ -36,7 +37,195 @@ def img(pid):
 
 ADJ = ["Cozy", "Vintage", "Premium", "Deluxe", "Classic", "Retro", "Mini", "Portable",
        "Handmade", "Eco", "Soft", "Ultra", "Compact", "Trendy", "Essential", "Signature",
-       "Everyday", "Bold", "Sleek", "Cute"]
+       "Everyday", "Bold", "Sleek", "Cute", "Modern", "Journey", "Fresh", "Travel", "Urban"]
+
+_PRODUCT_IMAGE_LIBRARY = {
+    "ring": [
+        "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=800&q=80&keyword=ring",
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=ring",
+    ],
+    "necklace": [
+        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80&keyword=necklace",
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=necklace",
+    ],
+    "bracelet": [
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=bracelet",
+    ],
+    "earring": [
+        "https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?auto=format&fit=crop&w=800&q=80&keyword=earring",
+    ],
+    "sunglasses": [
+        "https://images.unsplash.com/photo-1577803947579-9f5b9f8b9a1d?auto=format&fit=crop&w=800&q=80&keyword=sunglasses",
+    ],
+    "bag": [
+        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80&keyword=bag",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=bag",
+    ],
+    "tote": [
+        "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80&keyword=tote",
+    ],
+    "sneaker": [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=sneaker",
+    ],
+    "hoodie": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=hoodie",
+        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=hoodie",
+    ],
+    "tee": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=tee",
+    ],
+    "leggings": [
+        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80&keyword=leggings",
+    ],
+    "socks": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=socks",
+    ],
+    "joggers": [
+        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=joggers",
+    ],
+    "lantern": [
+        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80&keyword=lantern",
+    ],
+    "camp": [
+        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80&keyword=camp",
+    ],
+    "toy": [
+        "https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=800&q=80&keyword=toy",
+    ],
+    "blocks": [
+        "https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=800&q=80&keyword=blocks",
+    ],
+    "yarn": [
+        "https://images.unsplash.com/photo-1550376026-7375b92bb318?auto=format&fit=crop&w=800&q=80&keyword=yarn",
+    ],
+    "crochet": [
+        "https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80&keyword=crochet",
+    ],
+    "sketchbook": [
+        "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80&keyword=sketchbook",
+    ],
+    "plant": [
+        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80&keyword=plant",
+    ],
+    "gardening": [
+        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80&keyword=gardening",
+    ],
+    "power": [
+        "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80&keyword=power",
+    ],
+    "cable": [
+        "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80&keyword=cable",
+    ],
+    "earbuds": [
+        "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80&keyword=earbuds",
+    ],
+    "crystal": [
+        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=crystal",
+    ],
+    "cauldron": [
+        "https://images.unsplash.com/photo-1477313372947-d68a7d410e9f?auto=format&fit=crop&w=800&q=80&keyword=cauldron",
+    ],
+    "candles": [
+        "https://images.unsplash.com/photo-1602872029706-0d6d5c70d89d?auto=format&fit=crop&w=800&q=80&keyword=candles",
+    ],
+    "diffuser": [
+        "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80&keyword=diffuser",
+    ],
+    "towel": [
+        "https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=80&keyword=towel",
+    ],
+    "pillow": [
+        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80&keyword=pillow",
+    ],
+    "sheet": [
+        "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80&keyword=sheet",
+    ],
+    "nail": [
+        "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80&keyword=nail",
+    ],
+    "lamp": [
+        "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80&keyword=lamp",
+    ],
+    "tool": [
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80&keyword=tool",
+    ],
+    "headlamp": [
+        "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=800&q=80&keyword=headlamp",
+    ],
+    "chair": [
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80&keyword=chair",
+    ],
+    "mount": [
+        "https://images.unsplash.com/photo-1489824904134-891ab64532f1?auto=format&fit=crop&w=800&q=80&keyword=mount",
+    ],
+}
+
+_GENERIC_IMAGE_POOL = [
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=generic",
+    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=generic",
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=generic",
+    "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80&keyword=generic",
+]
+
+
+def normalize_tokens(value: str):
+    return re.sub(r"[^a-z0-9]+", " ", (value or "").lower()).split()
+
+
+def get_product_images(title: str, description: str = "", department: str = "", category: str = ""):
+    haystack = " ".join([title, description, department, category]).lower()
+    matches = []
+    for keyword, urls in _PRODUCT_IMAGE_LIBRARY.items():
+        if keyword in haystack:
+            matches.extend(urls)
+    if not matches:
+        department_key = normalize_tokens(department or category or title)
+        for token in department_key:
+            if token in _PRODUCT_IMAGE_LIBRARY:
+                matches.extend(_PRODUCT_IMAGE_LIBRARY[token])
+    if not matches:
+        matches = _GENERIC_IMAGE_POOL.copy()
+    unique = []
+    seen = set()
+    for url in matches:
+        if url not in seen:
+            seen.add(url)
+            unique.append(url)
+    return unique[:5]
+
+
+def resolve_product_department(title: str, description: str = "", category: str = "", department: str = ""):
+    haystack = " ".join([title, description, category, department]).lower()
+
+    if any(token in haystack for token in ["yarn", "crochet", "knitting", "craft", "embroidery", "sketchbook", "paint", "bead", "washi", "marker"]):
+        return "Hobbies, Arts & Crafts"
+    if any(token in haystack for token in ["ring", "necklace", "earring", "bracelet", "pendant", "jewel", "anklet", "gem", "crystal"]):
+        return "Jewelry"
+    if any(token in haystack for token in ["sunglasses", "handbag", "bag", "tote", "backpack", "belt", "sneaker", "shoes", "slipper", "wallet", "card holder", "boot"]):
+        return "Shoes, Handbags & Accessories"
+    if any(token in haystack for token in ["hoodie", "tee", "legging", "jogger", "socks", "shirt", "apparel", "pajama", "denim"]):
+        return "Apparel"
+    if any(token in haystack for token in ["lamp", "lantern", "camp", "hammock", "cooler", "dry bag", "chair", "stove", "firepit", "tarp"]):
+        return "Camping & Outdoor Entertainment"
+    if any(token in haystack for token in ["plant", "garden", "watering", "shears", "soil", "mister", "planter", "seed", "wind chime"]):
+        return "Home & Garden"
+    if any(token in haystack for token in ["cable", "earbud", "power", "phone", "screen", "charger", "usb", "tripod", "bluetooth", "wireless", "adapter"]):
+        return "Electronics & Gadgets"
+    if any(token in haystack for token in ["nail", "beauty", "makeup", "skincare", "facial", "cosmetic", "lip", "gel", "lamp"]):
+        return "Health & Beauty"
+    if any(token in haystack for token in ["towel", "pillow", "sheet", "bath", "shower", "blanket", "decor", "diffuser", "candles", "organizer"]):
+        return "Bed & Bath" if "bath" in haystack or "towel" in haystack or "sheet" in haystack else "Home Decor"
+    if any(token in haystack for token in ["tool", "headlamp", "screwdriver", "stapler", "measure", "zip tie", "desk", "office", "notebook", "cable organizer"]):
+        return "Tools, Home Improvement & Office Supplies"
+    if any(token in haystack for token in ["mount", "bike", "seat", "tire", "truck", "handlebar", "automotive", "key fob"]):
+        return "Automotive & E-Bike Accessories"
+    if any(token in haystack for token in ["crystal", "cauldron", "altar", "tarot", "sage", "pendulum", "ritual", "spell", "witch", "wicca"]):
+        return "Wicca & Wiccan Supplies"
+    if any(token in haystack for token in ["toy", "blocks", "puzzle", "doll", "game", "plush", "action", "kids"]):
+        return "Children's Toys & Entertainment"
+    if any(token in haystack for token in ["pin", "figurine", "trading", "card", "coin", "magnet", "bobblehead", "collectible", "oddity"]):
+        return "Collectibles & Oddities"
+    return department or category or "Apparel"
 
 # name, slug, price_range, subcats, keywords, image ids
 DEPARTMENTS = [
@@ -139,9 +328,12 @@ DEPARTMENTS = [
 
 
 def gen_names(keywords, n, rnd):
-    combos = [f"{a} {k}" for a in ADJ for k in keywords]
+    combos = []
+    for k in keywords:
+        for a in ADJ:
+            combos.append(f"{a} {k}")
+            combos.append(f"{k} {a}")
     rnd.shuffle(combos)
-    # dedupe preserving order
     seen, out = set(), []
     for c in combos:
         if c not in seen:
@@ -149,6 +341,12 @@ def gen_names(keywords, n, rnd):
             out.append(c)
         if len(out) >= n:
             break
+    if len(out) < n:
+        for i in range(n - len(out)):
+            candidate = f"{keywords[i % len(keywords)]} Deluxe #{i + 1}"
+            if candidate not in seen:
+                out.append(candidate)
+                seen.add(candidate)
     return out
 
 
@@ -171,20 +369,17 @@ def seed():
             db.departments.insert_one({"id": dep_id, "name": name, "slug": slug,
                                        "image": img(imgs[0]), "order": d_idx,
                                        "created_at": now_iso()})
-        cat = db.categories.find_one({"department_id": dep_id, "name": name}, {"_id": 0})
-        if cat:
-            cat_id = cat["id"]
-        else:
-            cat_id = str(uuid.uuid4())
-            db.categories.insert_one({"id": cat_id, "name": name, "department_id": dep_id,
-                                      "created_at": now_iso()})
+        db.categories.delete_many({"department_id": dep_id})
+        cat_id = str(uuid.uuid4())
+        db.categories.insert_one({"id": cat_id, "name": name, "department_id": dep_id,
+                                  "created_at": now_iso()})
 
+        db.products.delete_many({"department_id": dep_id})
         names = gen_names(keywords, 50, rnd)
         for i, base in enumerate(names):
             title = f"{subcats[i % len(subcats)]} {base}" if subcats else base
-            if db.products.find_one({"title": title, "department_id": dep_id}):
-                total += 1
-                continue
+            description = f"{title} — flash-deal pricing at The Fury Zone. Top-rated pick, unbeatable value while stock lasts."
+            product_images = get_product_images(title, description, name, name)
             price = round(rnd.uniform(*prange), 2)
             original = round(price * rnd.uniform(2.8, 4.8), 2)
             pid = str(uuid.uuid4())
@@ -194,13 +389,13 @@ def seed():
             db.products.insert_one({
                 "id": pid,
                 "title": title,
-                "description": f"{title} \u2014 flash-deal pricing at The Fury Zone. Top-rated pick, unbeatable value while stock lasts.",
+                "description": description,
                 "price": price,
                 "original_price": original,
                 "department_id": dep_id,
                 "category_id": cat_id,
                 "brand_id": None,
-                "images": [img(imgs[i % len(imgs)])],
+                "images": product_images,
                 "tags": tags,
                 "subcategory": subcats[i % len(subcats)] if subcats else None,
                 "variants": [],

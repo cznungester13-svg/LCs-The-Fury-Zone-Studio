@@ -31,9 +31,13 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="border-b-2 border-black">
+      <section className="border-b-2 border-black bg-[#fffaf3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
           <div>
+            <div className="flex items-center gap-3 mb-5">
+              <img src="/fury-zone-logo.jpeg" alt="The Fury Zone logo" className="h-14 w-14 rounded-xl border-2 border-black object-cover bg-white" />
+              <span className="font-mono uppercase text-xs tracking-[0.3em] text-[#FF3B30]">The Fury Zone</span>
+            </div>
             <span className="font-mono uppercase text-xs tracking-[0.3em] text-[#FF3B30]">Shop new · Sell used · Instant</span>
             <h1 className="font-head text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter uppercase leading-[0.9] mt-4">
               Enter the<br /><span className="text-[#FF3B30]">Fury</span> Zone
@@ -63,31 +67,45 @@ export default function Home() {
       {/* Department Grid Navigation Tiles */}
       {Array.isArray(departments) && departments.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-16">
-          <div className="border-b-2 border-black pb-3 mb-8">
+          <div className="border-b-2 border-black pb-3 mb-8 flex items-center justify-between gap-3 flex-wrap">
             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">Shop by Department</h2>
+            <p className="font-mono text-xs uppercase tracking-[0.25em] text-zinc-500">{departments.length} departments</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+          <div className="mb-8 flex flex-wrap gap-2">
+            {departments.map((d) => (
+              <Link
+                key={d.id}
+                to={`/store?department=${d.slug}`}
+                className="border-2 border-black bg-white px-3 py-2 text-xs font-black uppercase tracking-wide hover:bg-[#FF3B30] hover:text-white transition-colors"
+              >
+                {d.name}
+              </Link>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
             {departments.map((d) => (
               <Link 
                 key={d.id} 
                 to={`/store?department=${d.slug}`}
-                className="group relative border-2 border-black brutal-shadow bg-white overflow-hidden aspect-[4/3] block"
+                className="group relative border-2 border-black bg-white overflow-hidden block hover:-translate-y-1 transition-transform"
               >
                 {d.image ? (
                   <img 
                     src={d.image} 
                     alt={d.name} 
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    className="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105" 
                   />
                 ) : (
-                  <div className="w-full h-full bg-zinc-100 flex items-center justify-center font-mono text-zinc-400 text-xs">
+                  <div className="w-full aspect-[4/3] bg-zinc-100 flex items-center justify-center font-mono text-zinc-400 text-xs">
                     NO IMAGE AVAILABLE
                   </div>
                 )}
-                <div className="absolute inset-x-0 bottom-0 border-t-2 border-black bg-white p-3 transform transition-transform group-hover:bg-[#FF3B30] group-hover:text-white">
-                  <p className="font-black uppercase text-sm sm:text-base tracking-tight truncate flex items-center justify-between">
+                <div className="p-3 border-t-2 border-black bg-white group-hover:bg-[#FF3B30] group-hover:text-white transition-colors">
+                  <p className="font-black uppercase text-sm tracking-tight truncate flex items-center justify-between">
                     {d.name}
-                    <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight size={14} className="opacity-70" />
                   </p>
                 </div>
               </Link>

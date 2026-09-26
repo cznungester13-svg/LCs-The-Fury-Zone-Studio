@@ -35,6 +35,9 @@ export default function Register() {
       <div className="w-full max-w-md border-2 border-black brutal-shadow bg-white p-8">
         <h1 className="text-4xl font-black uppercase tracking-tighter">Register</h1>
         <p className="text-zinc-500 mt-1">Join the Zone. It's free.</p>
+        <p className="mt-2 text-[11px] text-zinc-500 font-mono uppercase tracking-[0.2em]">
+          Demo: customer@furyzone.com / Customer123! | admin@furyzone.com / Admin123!
+        </p>
         {error && <div className="mt-4 border-2 border-[#FF3B30] bg-red-50 text-[#FF3B30] px-4 py-2 text-sm font-bold" data-testid="register-error">{error}</div>}
         
         <form onSubmit={submit} className="mt-6 space-y-4">
