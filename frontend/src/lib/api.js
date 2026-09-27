@@ -20,4 +20,18 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Helper function for handling image URLs
+export const imgUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  const base = import.meta.env.VITE_API_URL || "";
+  return `${base}${url}`;
+};
+
+// Helper function for formatting API error messages
+export const apiError = (err) => {
+  if (typeof err === "string") return err;
+  return err?.message || "An unexpected error occurred";
+};
+
 export default api;
