@@ -28,6 +28,14 @@ export const imgUrl = (url) => {
   return `${base}${url}`;
 };
 
+// Helper function for formatting currency
+export const currency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount || 0);
+};
+
 // Helper function for formatting API error messages
 export const apiError = (err) => {
   if (typeof err === "string") return err;
