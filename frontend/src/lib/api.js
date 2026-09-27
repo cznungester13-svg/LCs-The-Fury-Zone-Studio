@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Create an axios instance pointing to your backend API
-const api = axios.create({
+export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: {
     "Content-Type": "application/json",
