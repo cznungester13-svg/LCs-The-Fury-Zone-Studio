@@ -1,16 +1,21 @@
 """
 Canonical seeder for LCs The Fury Zone.
-15 departments x 50 Temu-style low-price products with category-matched images,
-into the SAME database the API uses (MONGO_URL + DB_NAME).
-Run: python3 seed.py   (add --wipe to rebuild the catalog from scratch)
+15 departments x 50 DISTINCT items, each with its own matching image fetched
+from the Pixabay API (keyword search), into MONGO_URL + DB_NAME.
+
+Run: python3 seed.py --wipe
+Images are cached in .pixabay_cache.json so reruns are instant.
 """
 import os
 import sys
+import json
+import time
 import uuid
 import random
-import re
+from pathlib import Path
 from datetime import datetime, timezone
 
+import httpx
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from passlib.context import CryptContext
@@ -18,336 +23,163 @@ from passlib.context import CryptContext
 load_dotenv()
 MONGO_URL = os.getenv("MONGO_URI") or os.getenv("MONGODB_URL") or os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME", "test_database")
+PIXABAY_KEY = os.getenv("PIXABAY_API_KEY", "")
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 NEW_SHOPPER_FREE_ITEMS = 3
+CACHE_PATH = Path(__file__).parent / ".pixabay_cache.json"
+_cache = json.loads(CACHE_PATH.read_text()) if CACHE_PATH.exists() else {}
 
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def img(pid):
-    if str(pid).startswith("http"):
-        return pid
-    return f"https://images.unsplash.com/photo-{pid}?auto=format&fit=crop&w=800&q=80"
+def _save_cache():
+    CACHE_PATH.write_text(json.dumps(_cache, indent=0))
+
+
+def fetch_images(query, n=20):
+    """Return a list of image URLs for a keyword (cached, throttled)."""
+    key = query.lower().strip()
+    if key in _cache and _cache[key]:
+        return _cache[key]
+    urls = []
+    try:
+        r = httpx.get("https://pixabay.com/api/", params={
+            "key": PIXABAY_KEY, "q": query, "image_type": "photo",
+            "per_page": max(n, 3), "safesearch": "true", "order": "popular",
+        }, timeout=30)
+        if r.status_code == 200:
+            urls = [h["webformatURL"] for h in r.json().get("hits", [])]
+        elif r.status_code == 429:
+            time.sleep(30)
+            return fetch_images(query, n)
+    except Exception as e:
+        print(f"  ! image fetch failed for '{query}': {e}")
+    _cache[key] = urls
+    _save_cache()
+    time.sleep(0.7)
+    return urls
 
 
 ADJ = ["Cozy", "Vintage", "Premium", "Deluxe", "Classic", "Retro", "Mini", "Portable",
        "Handmade", "Eco", "Soft", "Ultra", "Compact", "Trendy", "Essential", "Signature",
-       "Everyday", "Bold", "Sleek", "Cute", "Modern", "Journey", "Fresh", "Travel", "Urban"]
+       "Everyday", "Bold", "Sleek", "Cute"]
 
-_PRODUCT_IMAGE_LIBRARY = {
-    "ring": [
-        "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=800&q=80&keyword=ring",
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=ring",
-    ],
-    "necklace": [
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80&keyword=necklace",
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=necklace",
-    ],
-    "bracelet": [
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=bracelet",
-    ],
-    "earring": [
-        "https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?auto=format&fit=crop&w=800&q=80&keyword=earring",
-    ],
-    "sunglasses": [
-        "https://images.unsplash.com/photo-1577803947579-9f5b9f8b9a1d?auto=format&fit=crop&w=800&q=80&keyword=sunglasses",
-    ],
-    "bag": [
-        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80&keyword=bag",
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=bag",
-    ],
-    "tote": [
-        "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80&keyword=tote",
-    ],
-    "sneaker": [
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=sneaker",
-    ],
-    "hoodie": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=hoodie",
-        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=hoodie",
-    ],
-    "tee": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=tee",
-    ],
-    "leggings": [
-        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80&keyword=leggings",
-    ],
-    "socks": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=socks",
-    ],
-    "joggers": [
-        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=joggers",
-    ],
-    "lantern": [
-        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80&keyword=lantern",
-    ],
-    "camp": [
-        "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80&keyword=camp",
-    ],
-    "toy": [
-        "https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=800&q=80&keyword=toy",
-    ],
-    "blocks": [
-        "https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=800&q=80&keyword=blocks",
-    ],
-    "yarn": [
-        "https://images.unsplash.com/photo-1550376026-7375b92bb318?auto=format&fit=crop&w=800&q=80&keyword=yarn",
-    ],
-    "crochet": [
-        "https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80&keyword=crochet",
-    ],
-    "sketchbook": [
-        "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80&keyword=sketchbook",
-    ],
-    "plant": [
-        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80&keyword=plant",
-    ],
-    "gardening": [
-        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80&keyword=gardening",
-    ],
-    "power": [
-        "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80&keyword=power",
-    ],
-    "cable": [
-        "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80&keyword=cable",
-    ],
-    "earbuds": [
-        "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80&keyword=earbuds",
-    ],
-    "crystal": [
-        "https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=800&q=80&keyword=crystal",
-    ],
-    "cauldron": [
-        "https://images.unsplash.com/photo-1477313372947-d68a7d410e9f?auto=format&fit=crop&w=800&q=80&keyword=cauldron",
-    ],
-    "candles": [
-        "https://images.unsplash.com/photo-1602872029706-0d6d5c70d89d?auto=format&fit=crop&w=800&q=80&keyword=candles",
-    ],
-    "diffuser": [
-        "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80&keyword=diffuser",
-    ],
-    "towel": [
-        "https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=80&keyword=towel",
-    ],
-    "pillow": [
-        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80&keyword=pillow",
-    ],
-    "sheet": [
-        "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80&keyword=sheet",
-    ],
-    "nail": [
-        "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80&keyword=nail",
-    ],
-    "lamp": [
-        "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80&keyword=lamp",
-    ],
-    "tool": [
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80&keyword=tool",
-    ],
-    "headlamp": [
-        "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=800&q=80&keyword=headlamp",
-    ],
-    "chair": [
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80&keyword=chair",
-    ],
-    "mount": [
-        "https://images.unsplash.com/photo-1489824904134-891ab64532f1?auto=format&fit=crop&w=800&q=80&keyword=mount",
-    ],
-}
-
-_GENERIC_IMAGE_POOL = [
-    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80&keyword=generic",
-    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80&keyword=generic",
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80&keyword=generic",
-    "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80&keyword=generic",
-]
-
-
-def normalize_tokens(value: str):
-    return re.sub(r"[^a-z0-9]+", " ", (value or "").lower()).split()
-
-
-def get_product_images(title: str, description: str = "", department: str = "", category: str = ""):
-    haystack = " ".join([title, description, department, category]).lower()
-    matches = []
-    for keyword, urls in _PRODUCT_IMAGE_LIBRARY.items():
-        if keyword in haystack:
-            matches.extend(urls)
-    if not matches:
-        department_key = normalize_tokens(department or category or title)
-        for token in department_key:
-            if token in _PRODUCT_IMAGE_LIBRARY:
-                matches.extend(_PRODUCT_IMAGE_LIBRARY[token])
-    if not matches:
-        matches = _GENERIC_IMAGE_POOL.copy()
-    unique = []
-    seen = set()
-    for url in matches:
-        if url not in seen:
-            seen.add(url)
-            unique.append(url)
-    return unique[:5]
-
-
-def resolve_product_department(title: str, description: str = "", category: str = "", department: str = ""):
-    haystack = " ".join([title, description, category, department]).lower()
-
-    if any(token in haystack for token in ["yarn", "crochet", "knitting", "craft", "embroidery", "sketchbook", "paint", "bead", "washi", "marker"]):
-        return "Hobbies, Arts & Crafts"
-    if any(token in haystack for token in ["ring", "necklace", "earring", "bracelet", "pendant", "jewel", "anklet", "gem", "crystal"]):
-        return "Jewelry"
-    if any(token in haystack for token in ["sunglasses", "handbag", "bag", "tote", "backpack", "belt", "sneaker", "shoes", "slipper", "wallet", "card holder", "boot"]):
-        return "Shoes, Handbags & Accessories"
-    if any(token in haystack for token in ["hoodie", "tee", "legging", "jogger", "socks", "shirt", "apparel", "pajama", "denim"]):
-        return "Apparel"
-    if any(token in haystack for token in ["lamp", "lantern", "camp", "hammock", "cooler", "dry bag", "chair", "stove", "firepit", "tarp"]):
-        return "Camping & Outdoor Entertainment"
-    if any(token in haystack for token in ["plant", "garden", "watering", "shears", "soil", "mister", "planter", "seed", "wind chime"]):
-        return "Home & Garden"
-    if any(token in haystack for token in ["cable", "earbud", "power", "phone", "screen", "charger", "usb", "tripod", "bluetooth", "wireless", "adapter"]):
-        return "Electronics & Gadgets"
-    if any(token in haystack for token in ["nail", "beauty", "makeup", "skincare", "facial", "cosmetic", "lip", "gel", "lamp"]):
-        return "Health & Beauty"
-    if any(token in haystack for token in ["towel", "pillow", "sheet", "bath", "shower", "blanket", "decor", "diffuser", "candles", "organizer"]):
-        return "Bed & Bath" if "bath" in haystack or "towel" in haystack or "sheet" in haystack else "Home Decor"
-    if any(token in haystack for token in ["tool", "headlamp", "screwdriver", "stapler", "measure", "zip tie", "desk", "office", "notebook", "cable organizer"]):
-        return "Tools, Home Improvement & Office Supplies"
-    if any(token in haystack for token in ["mount", "bike", "seat", "tire", "truck", "handlebar", "automotive", "key fob"]):
-        return "Automotive & E-Bike Accessories"
-    if any(token in haystack for token in ["crystal", "cauldron", "altar", "tarot", "sage", "pendulum", "ritual", "spell", "witch", "wicca"]):
-        return "Wicca & Wiccan Supplies"
-    if any(token in haystack for token in ["toy", "blocks", "puzzle", "doll", "game", "plush", "action", "kids"]):
-        return "Children's Toys & Entertainment"
-    if any(token in haystack for token in ["pin", "figurine", "trading", "card", "coin", "magnet", "bobblehead", "collectible", "oddity"]):
-        return "Collectibles & Oddities"
-    return department or category or "Apparel"
-
-# name, slug, price_range, subcats, keywords, image ids
+# name, slug, (min,max price), subcats, [ (item type, pixabay query), ... ]
 DEPARTMENTS = [
-    ("Apparel", "apparel", (2.99, 16.99), ["Men's", "Women's", "Kids"],
-     ["Graphic Hoodie", "Vintage Tee", "Lounge Set", "Stretch Leggings", "Pajama Pants",
-      "Cozy Socks", "Thermal Top", "Denim Jacket", "Flannel Shirt", "Joggers"],
-     ["1521572267360-ee0c2909d518", "1503342217505-b0a15ec3261c", "1583743814966-8936f5b7be1a",
-      "1620799140408-edc6dcb6d633", "1479064555552-3ef4979f8908"]),
+    ("Apparel", "apparel", (2.99, 16.99), ["Men's", "Women's", "Kids"], [
+        ("Hoodie", "hoodie"), ("Graphic Tee", "t-shirt"), ("Leggings", "leggings"),
+        ("Pajama Set", "pajamas"), ("Socks", "socks"), ("Denim Jacket", "denim jacket"),
+        ("Flannel Shirt", "flannel shirt"), ("Joggers", "jogger pants"), ("Sweater", "sweater"),
+        ("Dress", "dress"), ("Shorts", "shorts clothing"), ("Tank Top", "tank top"),
+        ("Cardigan", "cardigan"), ("Beanie", "beanie hat")]),
 
-    ("Shoes, Handbags & Accessories", "shoes-accessories", (3.99, 18.99), ["Men's", "Women's", "Kids"],
-     ["Running Sneakers", "Crossbody Bag", "Canvas Tote", "Slippers", "Bucket Hat",
-      "Sunglasses", "Card Holder", "Ankle Boots", "Backpack", "Woven Belt"],
-     ["1542291026-7eec264c27ff", "1584917865442-de89df76afd3", "1595950653106-6c9ebd614d3a",
-      "1600185365483-26d7a4cc7519", "1548036328-c9fa89d128fa"]),
+    ("Shoes, Handbags & Accessories", "shoes-accessories", (3.99, 18.99), ["Men's", "Women's", "Kids"], [
+        ("Sneakers", "sneakers"), ("Handbag", "handbag"), ("Tote Bag", "tote bag"),
+        ("Slippers", "slippers"), ("Bucket Hat", "bucket hat"), ("Sunglasses", "sunglasses"),
+        ("Wallet", "wallet"), ("Boots", "boots shoes"), ("Backpack", "backpack"),
+        ("Belt", "leather belt"), ("Scarf", "scarf"), ("Watch", "wristwatch"),
+        ("Cap", "baseball cap"), ("Crossbody Bag", "crossbody bag")]),
 
-    ("Health & Beauty", "health-beauty", (1.99, 14.99), None,
-     ["Gel Nail Polish Set", "Mini UV LED Lamp", "Jade Roller & Gua Sha", "Makeup Sponge Blender",
-      "Exfoliating Foot Peel", "Scalp Massager", "Facial Cleansing Brush", "Lip Care Trio"],
-     ["1522337360788-8b13dee7a37e", "1512496015851-a90fb38ba796", "1571781926291-c477ebfd024b",
-      "1596462502278-27bfdc403348"]),
+    ("Health & Beauty", "health-beauty", (1.99, 14.99), None, [
+        ("Nail Polish", "nail polish"), ("UV Nail Lamp", "nail lamp"), ("Face Roller", "face roller"),
+        ("Makeup Sponge", "makeup sponge"), ("Foot Mask", "foot care"), ("Scalp Massager", "scalp massager"),
+        ("Facial Brush", "facial cleansing brush"), ("Lip Balm", "lip balm"), ("Skincare Serum", "skincare serum"),
+        ("Hair Clips", "hair clips"), ("Perfume", "perfume bottle"), ("Eyeshadow Palette", "eyeshadow palette"),
+        ("Hand Cream", "hand cream"), ("Bath Bomb", "bath bomb")]),
 
-    ("Home & Garden", "home-garden", (2.49, 15.99), None,
-     ["Solar Garden Lights", "Plant Mister", "Pruning Shears", "Hanging Planter",
-      "Seed Starting Tray", "Wind Chime", "Watering Can", "Garden Kneeling Pad"],
-     ["1585320806297-9794b3e4eeae", "1416879595882-3373a0480b5b", "1466692476868-aef1dfb1e735"]),
+    ("Home & Garden", "home-garden", (2.49, 15.99), None, [
+        ("Solar Garden Light", "solar garden light"), ("Plant Mister", "plant mister spray"),
+        ("Pruning Shears", "pruning shears"), ("Hanging Planter", "hanging planter"),
+        ("Seed Tray", "seedling tray"), ("Wind Chime", "wind chime"), ("Watering Can", "watering can"),
+        ("Garden Gloves", "garden gloves"), ("Flower Pot", "flower pot"), ("Bird Feeder", "bird feeder"),
+        ("Succulent", "succulent plant"), ("Garden Hose", "garden hose"), ("Outdoor Lantern", "garden lantern"),
+        ("Trowel", "garden trowel")]),
 
-    ("Tools, Home Improvement & Office Supplies", "tools-office", (1.49, 16.99), None,
-     ["Multi-Bit Screwdriver", "Magnetic Wristband", "LED Headlamp", "Tape Measure",
-      "Zip Tie Assortment", "Sticky Note Pack", "Gel Pen Set", "Desk Stapler",
-      "Notebook Bundle", "Cable Organizer"],
-     ["1581092160607-ee22621dd758", "1504148455328-c376907d081c", "1530124566582-a618bc2615dc",
-      "1572981779307-38b8cabb2407", "1497032628192-86f99bcd76bc", "1524995997946-a1c2e315a42f",
-      "1517842645767-c639042777db", "1587145820266-a5951ee6f620"]),
+    ("Tools, Home Improvement & Office Supplies", "tools-office", (1.49, 16.99), None, [
+        ("Screwdriver Set", "screwdriver set"), ("Tape Measure", "tape measure"), ("Headlamp", "headlamp"),
+        ("Hammer", "hammer tool"), ("Pliers", "pliers"), ("Sticky Notes", "sticky notes"),
+        ("Pen Set", "pens"), ("Stapler", "stapler"), ("Notebook", "notebook"),
+        ("Cable Organizer", "cable organizer"), ("Flashlight", "flashlight"), ("Wrench", "wrench"),
+        ("Scissors", "scissors"), ("Desk Lamp", "desk lamp")]),
 
-    ("Jewelry", "jewelry", (0.49, 5.99), None,
-     ["Dainty Layered Necklace", "Minimalist Ring Set", "Huggie Earrings", "Charm Bracelet",
-      "Stackable Rings", "Pendant Necklace", "Stud Earring Pack", "Anklet Chain"],
-     ["1515562141207-7a88fb7ce338", "1535223289827-42f1e9919769", "1531306728370-e2ebd9d7bb99",
-      "1611591437281-460bfbe1220a", "1599643478518-a784e5dc4c8f"]),
+    ("Jewelry", "jewelry", (0.49, 5.99), None, [
+        ("Necklace", "necklace"), ("Ring", "ring jewelry"), ("Earrings", "earrings"),
+        ("Bracelet", "bracelet"), ("Pendant", "pendant necklace"), ("Anklet", "anklet"),
+        ("Brooch", "brooch"), ("Charm", "charm jewelry"), ("Choker", "choker necklace"),
+        ("Bangle", "bangle"), ("Nose Ring", "nose ring"), ("Hair Pin", "hair pin"),
+        ("Locket", "locket"), ("Stud Earrings", "stud earrings")]),
 
-    ("Electronics & Gadgets", "electronics", (2.99, 19.99), None,
-     ["Braided USB-C Cable", "Phone Ring Holder", "Wireless Earbuds", "Mini Power Bank",
-      "Screen Cleaner Kit", "Bluetooth Tracker", "LED Strip Light", "Phone Tripod"],
-     ["1505740420928-5e560c06d30e", "1546868871-7041f2a55e12", "1583394838336-acd977736f90",
-      "1498049794561-7780e7231661"]),
+    ("Electronics & Gadgets", "electronics", (2.99, 19.99), None, [
+        ("USB Cable", "usb cable"), ("Phone Holder", "phone holder"), ("Earbuds", "earbuds"),
+        ("Power Bank", "power bank"), ("Bluetooth Speaker", "bluetooth speaker"), ("Smart Watch", "smartwatch"),
+        ("Webcam", "webcam"), ("Mouse", "computer mouse"), ("Keyboard", "keyboard"),
+        ("Phone Tripod", "phone tripod"), ("LED Strip", "led strip lights"), ("Charger", "phone charger"),
+        ("Headphones", "headphones"), ("Phone Case", "phone case")]),
 
-    ("Hobbies, Arts & Crafts", "hobbies-crafts", (1.29, 13.99), None,
-     ["Acrylic Yarn Cake", "Ergonomic Crochet Hook", "Knitting Needle Set", "Stitch Markers Set",
-      "Embroidery Floss Pack", "Blending Markers", "Sketchbook", "Washi Tape Set", "Bead Kit"],
-     ["https://images.unsplash.com/photo-1550376026-7375b92bb318?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80",
-      "https://images.pexels.com/photos/8931780/pexels-photo-8931780.jpeg?auto=compress&cs=tinysrgb&w=800",
-      "https://images.unsplash.com/photo-1668072587859-f0f30c8fa938?auto=format&fit=crop&w=800&q=80"]),
+    ("Hobbies, Arts & Crafts", "hobbies-crafts", (1.29, 13.99), None, [
+        ("Yarn", "yarn"), ("Crochet Hook", "crochet hook"), ("Knitting Needles", "knitting needles"),
+        ("Embroidery Kit", "embroidery"), ("Markers", "art markers"), ("Sketchbook", "sketchbook"),
+        ("Washi Tape", "washi tape"), ("Beads", "craft beads"), ("Paint Set", "paint set"),
+        ("Paint Brushes", "paint brushes"), ("Glue Gun", "glue gun"), ("Stickers", "stickers"),
+        ("Canvas", "art canvas"), ("Sewing Kit", "sewing kit")]),
 
-    ("Automotive & E-Bike Accessories", "automotive-ebike", (2.49, 17.99), None,
-     ["Car Phone Mount", "Microfiber Towel Pack", "E-Bike Handlebar Grips", "LED Valve Lights",
-      "Seat Cushion", "Key Fob Cover", "Trunk Organizer", "Bike Phone Bag"],
-     ["1503376780353-7e6692767b70", "1489824904134-891ab64532f1", "1558981403-c5f9899a28bc",
-      "1449965408869-eaa3f722e40d"]),
+    ("Automotive & E-Bike Accessories", "automotive-ebike", (2.49, 17.99), None, [
+        ("Car Phone Mount", "car phone mount"), ("Microfiber Towel", "microfiber towel"),
+        ("Bike Handlebar Grips", "bicycle handlebar"), ("Tire Valve Caps", "tire valve"),
+        ("Car Seat Cushion", "car seat cushion"), ("Keychain", "keychain"), ("Trunk Organizer", "car trunk organizer"),
+        ("Bike Light", "bicycle light"), ("Air Freshener", "car air freshener"), ("Jumper Cables", "jumper cables"),
+        ("Bike Helmet", "bike helmet"), ("Car Vacuum", "car vacuum"), ("Floor Mats", "car floor mat"),
+        ("Bike Lock", "bike lock")]),
 
-    ("Bed & Bath", "bed-bath", (3.49, 18.99), None,
-     ["Microfiber Sheet Set", "Plush Bath Towel", "Memory Foam Pillow", "Shower Curtain",
-      "Bath Mat", "Weighted Blanket", "Bathrobe", "Throw Blanket"],
-     ["1584100936595-c0654b55a2e2", "1616046229478-9901c5536a45", "1522771739844-6a9f6d5f14af",
-      "1631049307264-da0ec9d70304"]),
+    ("Bed & Bath", "bed-bath", (3.49, 18.99), None, [
+        ("Bed Sheets", "bed sheets"), ("Bath Towel", "bath towel"), ("Pillow", "pillow"),
+        ("Shower Curtain", "shower curtain"), ("Bath Mat", "bath mat"), ("Blanket", "blanket"),
+        ("Bathrobe", "bathrobe"), ("Duvet", "duvet bedding"), ("Washcloth", "washcloth"),
+        ("Soap Dispenser", "soap dispenser"), ("Laundry Basket", "laundry basket"),
+        ("Toothbrush Holder", "toothbrush holder"), ("Comforter", "comforter"), ("Pillowcase", "pillowcase")]),
 
-    ("Home Decor", "home-decor", (2.49, 16.99), None,
-     ["Faux Succulent", "Wall Tapestry", "Throw Pillow Cover", "Aromatherapy Diffuser",
-      "Desk Organizer", "Framed Art Print", "Scented Candle", "String Fairy Lights"],
-     ["1513519245088-0e12902e5a38", "1538688525198-9b88f6f53126", "1579656381226-5fc0f0100c3b",
-      "1567016432779-094069958ea5"]),
+    ("Home Decor", "home-decor", (2.49, 16.99), None, [
+        ("Faux Plant", "faux plant decor"), ("Wall Art", "wall art"), ("Throw Pillow", "throw pillow"),
+        ("Diffuser", "aroma diffuser"), ("Vase", "vase"), ("Candle", "candle"),
+        ("String Lights", "string lights"), ("Picture Frame", "picture frame"), ("Wall Clock", "wall clock"),
+        ("Mirror", "decorative mirror"), ("Area Rug", "area rug"), ("Decor Figurine", "figurine decor"),
+        ("Table Lamp", "table lamp"), ("Wall Shelf", "wall shelf")]),
 
-    ("Wicca & Wiccan Supplies", "wicca", (1.99, 14.99), None,
-     ["Raw Crystal Cluster", "Sage Cleansing Stick", "Mini Cauldron", "Altar Cloth",
-      "Chakra Incense Cones", "Tarot Card Bag", "Ritual Candle Set", "Pendulum"],
-     ["https://images.pexels.com/photos/4040598/pexels-photo-4040598.jpeg?auto=compress&cs=tinysrgb&w=800",
-      "https://images.unsplash.com/photo-1621923647893-901f834b3e6a?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1477313372947-d68a7d410e9f?auto=format&fit=crop&w=800&q=80",
-      "https://images.pexels.com/photos/16926698/pexels-photo-16926698.jpeg?auto=compress&cs=tinysrgb&w=800"]),
+    ("Wicca & Wiccan Supplies", "wicca", (1.99, 14.99), None, [
+        ("Healing Crystal", "healing crystals"), ("Sage Smudge Stick", "sage smudge"),
+        ("Mini Cauldron", "cauldron"), ("Altar Cloth", "altar cloth"), ("Incense", "incense"),
+        ("Tarot Cards", "tarot cards"), ("Ritual Candle", "ritual candle"), ("Pendulum", "crystal pendulum"),
+        ("Crystal Ball", "crystal ball"), ("Amulet", "amulet"), ("Spell Jar", "spell jar"),
+        ("Rune Stones", "rune stones"), ("Moon Decor", "moon decor"), ("Dried Herbs", "dried herbs")]),
 
-    ("Camping & Outdoor Entertainment", "camping-outdoor", (3.99, 19.99), None,
-     ["Portable Camping Stove", "LED Tent Lantern", "Waterproof Dry Bag", "Insulated Cooler",
-      "Paracord Bracelet", "Folding Camp Chair", "Hammock", "Portable Firepit"],
-     ["1504280390367-361c6d9f38f4", "1510312305653-8ed496efae75", "1478131143081-80f7f84ca84d"]),
+    ("Camping & Outdoor Entertainment", "camping-outdoor", (3.99, 19.99), None, [
+        ("Camping Stove", "camping stove"), ("Lantern", "camping lantern"), ("Dry Bag", "dry bag"),
+        ("Cooler", "cooler box"), ("Paracord Bracelet", "paracord bracelet"), ("Camp Chair", "camping chair"),
+        ("Hammock", "hammock"), ("Tent", "tent"), ("Sleeping Bag", "sleeping bag"),
+        ("Hiking Backpack", "hiking backpack"), ("Water Bottle", "water bottle"), ("Binoculars", "binoculars"),
+        ("Compass", "compass"), ("Camp Flashlight", "camping flashlight")]),
 
-    ("Children's Toys & Entertainment", "kids-toys", (2.49, 19.99), None,
-     ["Building Blocks Set", "Plush Toy", "Remote Control Car", "Jigsaw Puzzle",
-      "Family Board Game", "Kids Art Kit", "Action Figure", "Dollhouse Set",
-      "Slime Making Kit", "Colorful Kite"],
-     ["1558060370-d644479cb6f7", "1596461404969-9ae70f2830c1", "1566576912321-d58ddd7a6088",
-      "1587654780291-39c9404d746b", "1512314889357-e157c22f938d", "1545558014-8692077e9b5c",
-      "1610631787813-9eeb1a2386cc"]),
+    ("Children's Toys & Entertainment", "kids-toys", (2.49, 19.99), None, [
+        ("Building Blocks", "building blocks toy"), ("Plush Toy", "plush toy"), ("RC Car", "remote control car toy"),
+        ("Jigsaw Puzzle", "jigsaw puzzle"), ("Board Game", "board game"), ("Art Kit", "kids art kit"),
+        ("Action Figure", "action figure"), ("Dollhouse", "dollhouse"), ("Slime Kit", "slime toy"),
+        ("Kite", "kite"), ("Toy Train", "toy train"), ("Play Kitchen", "toy kitchen"),
+        ("Stuffed Animal", "stuffed animal"), ("Toy Robot", "toy robot")]),
 
-    ("Collectibles & Oddities", "collectibles", (0.99, 17.99), None,
-     ["Enamel Pin", "Vinyl Figure", "Trading Card Pack", "Mini Figurine", "Retro Keychain",
-      "Sticker Pack", "Bobblehead", "Souvenir Magnet", "Novelty Coin"],
-     ["1606107557195-0e29a4b5b4aa", "1608889825205-eebdb9fc5806", "1611930022073-b7a4ba5fcccd",
-      "1578632767115-351597cf2477", "1600334129128-685c5582fd35", "1518331647614-7a1f04cd34cf"]),
+    ("Collectibles & Oddities", "collectibles", (0.99, 17.99), None, [
+        ("Enamel Pin", "enamel pin"), ("Vinyl Figure", "vinyl figure toy"), ("Trading Cards", "trading cards"),
+        ("Figurine", "figurine"), ("Keychain", "keychain collectible"), ("Sticker Pack", "sticker pack"),
+        ("Bobblehead", "bobblehead"), ("Fridge Magnet", "fridge magnet"), ("Collector Coin", "coin collection"),
+        ("Postage Stamp", "postage stamp"), ("Comic Book", "comic book"), ("Model Kit", "model kit"),
+        ("Snow Globe", "snow globe"), ("Postcard", "vintage postcard")]),
 ]
 
-
-def gen_names(keywords, n, rnd):
-    combos = []
-    for k in keywords:
-        for a in ADJ:
-            combos.append(f"{a} {k}")
-            combos.append(f"{k} {a}")
-    rnd.shuffle(combos)
-    seen, out = set(), []
-    for c in combos:
-        if c not in seen:
-            seen.add(c)
-            out.append(c)
-        if len(out) >= n:
-            break
-    if len(out) < n:
-        for i in range(n - len(out)):
-            candidate = f"{keywords[i % len(keywords)]} Deluxe #{i + 1}"
-            if candidate not in seen:
-                out.append(candidate)
-                seen.add(candidate)
-    return out
+FALLBACK = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80"
 
 
 def wipe():
@@ -358,53 +190,62 @@ def wipe():
 
 def seed():
     print(f"Seeding into DB: {DB_NAME}")
+    if not PIXABAY_KEY:
+        print("WARNING: PIXABAY_API_KEY not set; images will use fallback.")
     total = 0
-    for d_idx, (name, slug, prange, subcats, keywords, imgs) in enumerate(DEPARTMENTS):
-        rnd = random.Random(1000 + d_idx)
+    for d_idx, (name, slug, prange, subcats, types) in enumerate(DEPARTMENTS):
+        rnd = random.Random(2000 + d_idx)
         dep = db.departments.find_one({"slug": slug}, {"_id": 0})
         if dep:
             dep_id = dep["id"]
         else:
             dep_id = str(uuid.uuid4())
             db.departments.insert_one({"id": dep_id, "name": name, "slug": slug,
-                                       "image": img(imgs[0]), "order": d_idx,
-                                       "created_at": now_iso()})
-        db.categories.delete_many({"department_id": dep_id})
-        cat_id = str(uuid.uuid4())
-        db.categories.insert_one({"id": cat_id, "name": name, "department_id": dep_id,
-                                  "created_at": now_iso()})
+                                       "image": "", "order": d_idx, "created_at": now_iso()})
+        cat = db.categories.find_one({"department_id": dep_id, "name": name}, {"_id": 0})
+        cat_id = cat["id"] if cat else str(uuid.uuid4())
+        if not cat:
+            db.categories.insert_one({"id": cat_id, "name": name, "department_id": dep_id,
+                                      "created_at": now_iso()})
 
-        db.products.delete_many({"department_id": dep_id})
-        names = gen_names(keywords, 50, rnd)
-        for i, base in enumerate(names):
+        # Fetch an image pool per item type.
+        type_images = {}
+        for disp, query in types:
+            imgs = fetch_images(query, 20)
+            type_images[disp] = imgs or [FALLBACK]
+        # Department tile image = first image of the first type.
+        db.departments.update_one({"id": dep_id},
+                                  {"$set": {"image": type_images[types[0][0]][0]}})
+
+        # Generate 50 items cycling through types; each gets a distinct image.
+        type_counter = {t[0]: 0 for t in types}
+        for i in range(50):
+            disp, query = types[i % len(types)]
+            adj = ADJ[i % len(ADJ)]
+            base = f"{adj} {disp}"
             title = f"{subcats[i % len(subcats)]} {base}" if subcats else base
-            description = f"{title} — flash-deal pricing at The Fury Zone. Top-rated pick, unbeatable value while stock lasts."
-            product_images = get_product_images(title, description, name, name)
+            if db.products.find_one({"title": title, "department_id": dep_id}):
+                total += 1
+                continue
+            pool = type_images[disp]
+            img_url = pool[type_counter[disp] % len(pool)]
+            type_counter[disp] += 1
             price = round(rnd.uniform(*prange), 2)
             original = round(price * rnd.uniform(2.8, 4.8), 2)
             pid = str(uuid.uuid4())
-            tags = [w.lower() for w in base.split()]
+            tags = [w.lower() for w in disp.split()]
             if subcats:
                 tags.append(subcats[i % len(subcats)].lower())
             db.products.insert_one({
-                "id": pid,
-                "title": title,
-                "description": description,
-                "price": price,
-                "original_price": original,
-                "department_id": dep_id,
-                "category_id": cat_id,
-                "brand_id": None,
-                "images": product_images,
-                "tags": tags,
+                "id": pid, "title": title,
+                "description": f"{title} \u2014 flash-deal pricing at The Fury Zone. Top-rated pick, unbeatable value while stock lasts.",
+                "price": price, "original_price": original,
+                "department_id": dep_id, "category_id": cat_id, "brand_id": None,
+                "images": [img_url], "tags": tags,
                 "subcategory": subcats[i % len(subcats)] if subcats else None,
-                "variants": [],
-                "stock": rnd.randint(15, 400),
-                "sold_count": rnd.randint(30, 9500),
-                "rating": round(rnd.uniform(4.4, 4.9), 1),
-                "featured": i < 2,
-                "is_active": True,
-                "created_at": now_iso(),
+                "variants": [], "stock": rnd.randint(15, 400),
+                "sold_count": rnd.randint(30, 9500), "rating": round(rnd.uniform(4.4, 4.9), 1),
+                "featured": i < 2, "is_active": True, "created_at": now_iso(),
             })
             total += 1
         print(f"  [{d_idx+1:>2}] {name}: 50 items")
@@ -415,7 +256,6 @@ def seed():
                               {"$set": {"code": code, "percent_off": off, "active": True,
                                         "created_at": now_iso()}}, upsert=True)
     print("Coupons: FURY10 (10%), ZONE20 (20%)")
-
     db.shop_settings.update_one({"setting": "resell_market"},
                                 {"$set": {"active": True, "status": "open"}}, upsert=True)
 
