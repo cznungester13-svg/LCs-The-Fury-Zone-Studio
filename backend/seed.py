@@ -8,6 +8,7 @@ Images are cached in .pixabay_cache.json so reruns are instant.
 """
 import os
 import sys
+import re
 import json
 import time
 import uuid
@@ -53,7 +54,14 @@ def fetch_images(query, n=20):
             "per_page": max(n, 3), "safesearch": "true", "order": "popular",
         }, timeout=30)
         if r.status_code == 200:
-            urls = [h["webformatURL"] for h in r.json().get("hits", [])]
+            for h in r.json().get("hits", []):
+                # previewURL lives on the durable cdn.pixabay.com domain; the
+                # pixabay.com/get webformat URLs are temporary and expire.
+                pv = h.get("previewURL", "")
+                if pv:
+                    urls.append(re.sub(r"_150(\.\w+)$", r"_640\1", pv))
+                elif h.get("webformatURL"):
+                    urls.append(h["webformatURL"])
         elif r.status_code == 429:
             time.sleep(30)
             return fetch_images(query, n)
@@ -73,9 +81,9 @@ ADJ = ["Cozy", "Vintage", "Premium", "Deluxe", "Classic", "Retro", "Mini", "Port
 DEPARTMENTS = [
     ("Apparel", "apparel", (2.99, 16.99), ["Men's", "Women's", "Kids"], [
         ("Hoodie", "hoodie"), ("Graphic Tee", "t-shirt"), ("Leggings", "leggings"),
-        ("Pajama Set", "pajamas"), ("Socks", "socks"), ("Denim Jacket", "denim jacket"),
+        ("Pajama Set", "pajamas sleepwear"), ("Socks", "wool socks"), ("Denim Jacket", "denim jacket"),
         ("Flannel Shirt", "flannel shirt"), ("Joggers", "jogger pants"), ("Sweater", "sweater"),
-        ("Dress", "dress"), ("Shorts", "shorts clothing"), ("Tank Top", "tank top"),
+        ("Dress", "summer dress"), ("Shorts", "shorts clothing"), ("Tank Top", "tank top apparel"),
         ("Cardigan", "cardigan"), ("Beanie", "beanie hat")]),
 
     ("Shoes, Handbags & Accessories", "shoes-accessories", (3.99, 18.99), ["Men's", "Women's", "Kids"], [
@@ -100,12 +108,19 @@ DEPARTMENTS = [
         ("Succulent", "succulent plant"), ("Garden Hose", "garden hose"), ("Outdoor Lantern", "garden lantern"),
         ("Trowel", "garden trowel")]),
 
-    ("Tools, Home Improvement & Office Supplies", "tools-office", (1.49, 16.99), None, [
+    ("Tools & Home Improvement", "tools-home-improvement", (1.49, 18.99), None, [
         ("Screwdriver Set", "screwdriver set"), ("Tape Measure", "tape measure"), ("Headlamp", "headlamp"),
-        ("Hammer", "hammer tool"), ("Pliers", "pliers"), ("Sticky Notes", "sticky notes"),
-        ("Pen Set", "pens"), ("Stapler", "stapler"), ("Notebook", "notebook"),
-        ("Cable Organizer", "cable organizer"), ("Flashlight", "flashlight"), ("Wrench", "wrench"),
-        ("Scissors", "scissors"), ("Desk Lamp", "desk lamp")]),
+        ("Hammer", "hammer tool"), ("Pliers", "pliers"), ("Power Drill", "power drill"),
+        ("Wrench", "wrench"), ("Flashlight", "flashlight"), ("Level Tool", "spirit level tool"),
+        ("Utility Knife", "utility knife"), ("Tool Bag", "tool bag"), ("Work Gloves", "work gloves"),
+        ("Allen Key Set", "allen keys"), ("Duct Tape", "duct tape")]),
+
+    ("Office & School Supplies", "office-school", (0.99, 14.99), None, [
+        ("Sticky Notes", "sticky notes"), ("Pen Set", "pens"), ("Stapler", "stapler"),
+        ("Notebook", "notebook"), ("Ring Binder", "ring binder"), ("Highlighters", "highlighter markers"),
+        ("Scissors", "scissors"), ("Desk Organizer", "desk organizer"), ("Paper Clips", "paper clips"),
+        ("School Backpack", "school backpack"), ("Pencil Case", "pencil case"), ("Calculator", "calculator"),
+        ("Glue Stick", "glue stick"), ("Sketch Pencils", "colored pencils")]),
 
     ("Jewelry", "jewelry", (0.49, 5.99), None, [
         ("Necklace", "necklace"), ("Ring", "ring jewelry"), ("Earrings", "earrings"),
@@ -114,7 +129,7 @@ DEPARTMENTS = [
         ("Bangle", "bangle"), ("Nose Ring", "nose ring"), ("Hair Pin", "hair pin"),
         ("Locket", "locket"), ("Stud Earrings", "stud earrings")]),
 
-    ("Electronics & Gadgets", "electronics", (2.99, 19.99), None, [
+    ("Technology & Gadgets", "technology-gadgets", (2.99, 19.99), None, [
         ("USB Cable", "usb cable"), ("Phone Holder", "phone holder"), ("Earbuds", "earbuds"),
         ("Power Bank", "power bank"), ("Bluetooth Speaker", "bluetooth speaker"), ("Smart Watch", "smartwatch"),
         ("Webcam", "webcam"), ("Mouse", "computer mouse"), ("Keyboard", "keyboard"),
@@ -177,6 +192,13 @@ DEPARTMENTS = [
         ("Bobblehead", "bobblehead"), ("Fridge Magnet", "fridge magnet"), ("Collector Coin", "coin collection"),
         ("Postage Stamp", "postage stamp"), ("Comic Book", "comic book"), ("Model Kit", "model kit"),
         ("Snow Globe", "snow globe"), ("Postcard", "vintage postcard")]),
+
+    ("Gag Gifts & Party Supplies", "gag-gifts-party", (0.99, 16.99), None, [
+        ("Party Balloons", "party balloons"), ("Confetti Poppers", "confetti"), ("Funny Mug", "funny coffee mug"),
+        ("Fake Mustache", "fake mustache"), ("Party Hats", "party hats"), ("Party Streamers", "party streamers"),
+        ("Novelty Glasses", "novelty party glasses"), ("Birthday Candles", "birthday candles"),
+        ("Party Poppers", "party popper"), ("Noise Maker", "party noise maker"), ("Rubber Duck", "rubber duck toy"),
+        ("Whoopee Cushion", "whoopee cushion"), ("Gift Box", "gift box"), ("Pinata", "pinata party")]),
 ]
 
 FALLBACK = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80"
@@ -211,14 +233,20 @@ def seed():
         # Fetch an image pool per item type.
         type_images = {}
         for disp, query in types:
-            imgs = fetch_images(query, 20)
+            imgs = fetch_images(query, 30)
             type_images[disp] = imgs or [FALLBACK]
         # Department tile image = first image of the first type.
         db.departments.update_one({"id": dep_id},
                                   {"$set": {"image": type_images[types[0][0]][0]}})
 
-        # Generate 50 items cycling through types; each gets a distinct image.
-        type_counter = {t[0]: 0 for t in types}
+        # Generate 50 items; each gets a DISTINCT image (prefer its own type's
+        # photos, borrow an unused department photo only if the type runs out).
+        dept_all = []
+        for t in types:
+            for u in type_images[t[0]]:
+                if u not in dept_all:
+                    dept_all.append(u)
+        used = set()
         for i in range(50):
             disp, query = types[i % len(types)]
             adj = ADJ[i % len(ADJ)]
@@ -228,8 +256,12 @@ def seed():
                 total += 1
                 continue
             pool = type_images[disp]
-            img_url = pool[type_counter[disp] % len(pool)]
-            type_counter[disp] += 1
+            img_url = next((u for u in pool if u not in used), None)
+            if img_url is None:
+                img_url = next((u for u in dept_all if u not in used), None)
+            if img_url is None:
+                img_url = pool[0] if pool else FALLBACK
+            used.add(img_url)
             price = round(rnd.uniform(*prange), 2)
             original = round(price * rnd.uniform(2.8, 4.8), 2)
             pid = str(uuid.uuid4())

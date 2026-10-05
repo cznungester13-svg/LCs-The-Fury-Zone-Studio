@@ -43,10 +43,6 @@ env/
 ENV/
 __pycache__/
 *.pyc
-.env
-
-.env.*
-*.env
 credentials.json
 *.pem
 *.key

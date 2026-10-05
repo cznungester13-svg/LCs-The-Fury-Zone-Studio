@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import { ProductCard } from "../components/Cards";
@@ -56,7 +56,9 @@ export default function Store() {
     }
   }, [deptSlug, departments]);
 
+  const reqRef = useRef(0);
   const load = useCallback(async () => {
+    const myReq = ++reqRef.current;
     setProducts(null);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
@@ -65,9 +67,9 @@ export default function Store() {
     params.set("sort", sort);
     try {
       const { data } = await api.get(`/products?${params.toString()}`);
-      setProducts(Array.isArray(data) ? data : []);
+      if (myReq === reqRef.current) setProducts(Array.isArray(data) ? data : []);
     } catch {
-      setProducts([]);
+      if (myReq === reqRef.current) setProducts([]);
     }
   }, [search, departmentId, maxPrice, sort]);
 

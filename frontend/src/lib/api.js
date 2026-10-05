@@ -1,8 +1,12 @@
 import axios from "axios";
 
+// Backend base URL comes from the environment (CRA injects REACT_APP_* at build time).
+// Falls back to same-origin "/api" (works behind the Kubernetes ingress and Vercel rewrite).
+const BACKEND_URL = (typeof process !== "undefined" && process.env && process.env.REACT_APP_BACKEND_URL) || "";
+
 // Create an axios instance pointing to your backend API
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,8 +28,7 @@ api.interceptors.request.use(
 export const imgUrl = (url) => {
   if (!url) return "";
   if (url.startsWith("http")) return url;
-  const base = import.meta.env.VITE_API_URL || "";
-  return `${base}${url}`;
+  return `${BACKEND_URL}${url}`;
 };
 
 // Helper function for formatting currency
