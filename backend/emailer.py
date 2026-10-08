@@ -48,3 +48,30 @@ def order_confirmation_html(order: dict) -> str:
         <p style="text-align:right;font-size:18px\"><b>Total: ${order['total']:.2f}</b></p>
       </div>
     </div>"""
+
+
+def _shell(body: str) -> str:
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
+      <div style="background:#0A0A0A;color:#fff;padding:24px"><h1 style="margin:0;color:#FF3B30">LCs THE FURY ZONE</h1></div>
+      <div style="padding:24px">{body}</div>
+    </div>"""
+
+
+def welcome_html(name: str) -> str:
+    from html import escape
+    return _shell(f"""
+        <h2>Welcome to the Zone, {escape(name or 'friend')}! \U0001F525</h2>
+        <p>Your account is live. As a new shopper you've got a
+           <b style="color:#FF3B30">New Shopper Bonus</b> waiting:
+           your <b>3 cheapest items are FREE</b> at checkout.</p>
+        <p>Fresh drops land weekly across 17 departments \u2014 come grab the deals.</p>
+    """)
+
+
+def newsletter_html() -> str:
+    return _shell("""
+        <h2>You're on the list! \u26A1</h2>
+        <p>Thanks for subscribing. You'll be first to hear about new drops,
+           flash deals and exclusive codes at The Fury Zone.</p>
+    """)

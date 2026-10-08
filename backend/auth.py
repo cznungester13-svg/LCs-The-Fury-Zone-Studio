@@ -9,6 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
 from database import db, now_iso, NO_ID
+from emailer import send_email, welcome_html
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -187,6 +188,11 @@ async def register(body: RegisterIn):
     }
 
     await db.users.insert_one(user)
+
+    try:
+        await send_email(body.email, "Welcome to LCs The Fury Zone", welcome_html(body.full_name))
+    except Exception:
+        pass
 
     token = create_token(user["id"])
     return {

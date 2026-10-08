@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from fastapi import APIRouter, HTTPException, Depends
 from database import db, now_iso, NO_ID
+from emailer import send_email, newsletter_html
 from auth import get_current_user
 
 router = APIRouter(prefix="", tags=["engage"])
@@ -119,4 +120,8 @@ async def subscribe_newsletter(body: dict):
         {"$set": {"email": email, "subscribed_at": now_iso()}},
         upsert=True,
     )
+    try:
+        await send_email(email, "You're on the list \u2014 LCs The Fury Zone", newsletter_html())
+    except Exception:
+        pass
     return {"ok": True, "message": "You're on the list!"}
